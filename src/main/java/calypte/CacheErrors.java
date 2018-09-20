@@ -1,0 +1,137 @@
+/*
+ * Calypte http://calypte.uoutec.com.br/
+ * Copyright (C) 2018 UoUTec. (calypte@uoutec.com.br)
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *        http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package calypte;
+
+/**
+ * Descreve os erros do cache.
+ * @author Ribeiro
+ *
+ */
+public class CacheErrors {
+
+	/**
+	 * ERROR 1007: Data is very large
+	 */
+	public static final CacheError ERROR_1007 = new CacheError(1007, "Data is very large");
+
+	/**
+	 * ERROR 1008: Key is very large
+	 */
+	public static final CacheError ERROR_1008 = new CacheError(1008, "Key is very large");
+
+	/**
+	 * ERROR 1010: Commit in progress
+	 */
+	public static final CacheError ERROR_1010 = new CacheError(1010, "Commit in progress");
+
+	/**
+	 * ERROR 1011: Transaction has been rolled back
+	 */
+	public static final CacheError ERROR_1011 = new CacheError(1011, "Transaction has been rolled back");
+
+	/**
+	 * ERROR 1012: Transaction has been commited
+	 */
+	public static final CacheError ERROR_1012 = new CacheError(1012, "Transaction has been commited");
+
+	/**
+	 * ERROR 1013: Transaction not started
+	 */
+	public static final CacheError ERROR_1013 = new CacheError(1013, "Transaction not started");
+
+	/**
+	 * ERROR 1014: Cache write error
+	 */
+	public static final CacheError ERROR_1014 = new CacheError(1014, "Cache write error");
+
+	/**
+	 * ERROR 1014: Cache read error
+	 */
+	public static final CacheError ERROR_1015 = new CacheError(1014, "Cache read error");
+	
+	/**
+	 * ERROR 1016: Transaction has been started
+	 */
+	public static final CacheError ERROR_1016 = new CacheError(1016, "Transaction has been started");
+
+	/**
+	 * ERROR 1018: Rollback error
+	 */
+	public static final CacheError ERROR_1018 = new CacheError(1018, "Rollback error");
+
+	/**
+	 * ERROR 1019: Commit error
+	 */
+	public static final CacheError ERROR_1019 = new CacheError(1019, "Commit error");
+
+	/**
+	 * ERROR 1020: Store item error
+	 */
+	public static final CacheError ERROR_1020 = new CacheError(1020, "Store item error");
+	
+	/**
+	 * ERROR 1021: Get item error
+	 */
+	public static final CacheError ERROR_1021 = new CacheError(1021, "Get item error");
+
+	/**
+	 * ERROR 1022: Fails to acquire the lock
+	 */
+	public static final CacheError ERROR_1022 = new CacheError(1022, "Fails to acquire the lock");
+
+	/**
+	 * ERROR 1023: Fails to execute action
+	 */
+	public static final CacheError ERROR_1023 = new CacheError(1023, "Fails to execute action");
+
+	/**
+	 * ERROR 1024: Lock wait timeout exceeded; try restarting transaction
+	 */
+	public static final CacheError ERROR_1024 = new CacheError(1024, "Lock wait timeout exceeded; try restarting transaction");
+
+	/**
+	 * ERROR 1025: Transaction %s not found
+	 */
+	public static final CacheError ERROR_1025 = new CacheError(1025, "Transaction %s not found");
+
+	/**
+	 * ERROR 1026: Lock %s not found for key %s
+	 */
+	public static final CacheError ERROR_1026 = new CacheError(1026, "Lock %s not found for key %s");
+
+	/**
+	 * ERROR 1027: Invalid current transaction
+	 */
+	public static final CacheError ERROR_1027 = new CacheError(1027, "Invalid current transaction");
+
+	/**
+	 * ERROR 1028: Invalid time to idle
+	 */
+	public static final CacheError ERROR_1028 = new CacheError(1028, "Invalid time to idle");
+
+	/**
+	 * ERROR 1029: Invalid time to live
+	 */
+	public static final CacheError ERROR_1029 = new CacheError(1029, "Invalid time to live");
+
+	/**
+	 * ERROR 1030: Expired Item
+	 */
+	public static final CacheError ERROR_1030 = new CacheError(1029, "Expired Item");
+	
+}
