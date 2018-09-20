@@ -25,7 +25,7 @@ import java.io.FileInputStream;
  * <pre>
  * ex:
  *     Configuration configuration = ...;
- *     Cache cache = new Cache(new PropertiesBRCacheConfig(configuration));
+ *     Cache cache = new Cache(new PropertiesCalypteConfig(configuration));
  * </pre>
  * @author Ribeiro
  *

@@ -20,7 +20,7 @@ package calypte;
 import java.io.InputStream;
 
 /**
- * É a classe central do BRCache. 
+ * É a classe central do Calypte. 
  * <p>Ele faz o mapeamento chave-valor. Uma chave 
  * somente pode estar associado a um valor. Não são
  * permtidos chaves duplicadas.</p> 

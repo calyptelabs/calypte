@@ -19,7 +19,7 @@ package calypte;
 
 
 /**
- * É a base de uma exceção no <b>BRCache</b>. Lançada se ocorrer alguma falha ao 
+ * É a base de uma exceção no <b>Calypte</b>. Lançada se ocorrer alguma falha ao 
  * tentar manipular os dados no cache.
  * 
  * @author Ribeiro

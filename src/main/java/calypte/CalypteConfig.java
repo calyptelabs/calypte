@@ -27,7 +27,7 @@ import calypte.memory.Memory;
  * Define a configuração de um cache.
  * <pre>
  * ex:
- *     BRCacheConfig config = new BRCacheConfig();
+ *     CalypteConfig config = new CalypteConfig();
  *     ...
  *     Cache cache = new Cache(config);
  * </pre>
