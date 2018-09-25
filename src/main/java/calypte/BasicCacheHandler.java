@@ -28,11 +28,12 @@ import org.brandao.entityfilemanager.LockProvider;
 import org.brandao.entityfilemanager.LockProviderImp;
 import org.brandao.entityfilemanager.SimpleEntityFileAccess;
 import org.brandao.entityfilemanager.TransactionLog;
+import org.brandao.entityfilemanager.tx.EntityFileTransactionFactoryImp;
 import org.brandao.entityfilemanager.tx.EntityFileTransactionManagerConfigurer;
 import org.brandao.entityfilemanager.tx.EntityFileTransactionManagerImp;
+import org.brandao.entityfilemanager.tx.RecoveryTransactionLog;
+import org.brandao.entityfilemanager.tx.RecoveryTransactionLogImp;
 import org.brandao.entityfilemanager.tx.TransactionLogImp;
-import org.brandao.entityfilemanager.tx.async.AsyncEntityFileTransactionFactory;
-import org.brandao.entityfilemanager.tx.async.AsyncRecoveryTransactionLog;
 
 import calypte.HugeListCalculator.HugeListInfo;
 import calypte.collections.BasicMapReferenceCollection;
@@ -129,9 +130,14 @@ public class BasicCacheHandler implements CacheHandler{
 			EntityFileManagerConfigurer efm           = new EntityFileManagerImp();
 			LockProvider lp                           = new LockProviderImp();
 			EntityFileTransactionManagerConfigurer tm = new EntityFileTransactionManagerImp();
-			AsyncRecoveryTransactionLog rtl           = new AsyncRecoveryTransactionLog("recovery", txPath, tm);
+			//Somente pode ser usado depois 
+			//que AsyncRecoveryTransactionLog suportar trucat e
+			//AbstractVirutalEntityFileAccess.map não provocar out of memory
+			//AsyncRecoveryTransactionLog rtl           = new AsyncRecoveryTransactionLog("recovery", txPath, tm);
+			RecoveryTransactionLog rtl                = new RecoveryTransactionLogImp("recovery", txPath, tm);
 			TransactionLog tl                         = new TransactionLogImp("binlog", txPath, tm);
-			EntityFileTransactionFactory eftf         = new AsyncEntityFileTransactionFactory(rtl);
+			EntityFileTransactionFactory eftf         = new EntityFileTransactionFactoryImp();
+			//EntityFileTransactionFactory eftf         = new AsyncEntityFileTransactionFactory(rtl);
 			
 			rtl.setForceReload(true);
 			

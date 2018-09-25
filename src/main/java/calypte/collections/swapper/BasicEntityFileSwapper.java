@@ -20,7 +20,7 @@ package calypte.collections.swapper;
 import java.lang.reflect.Array;
 
 import org.brandao.entityfilemanager.EntityFile;
-import org.brandao.entityfilemanager.EntityFileManager;
+import org.brandao.entityfilemanager.EntityFileManagerConfigurer;
 import org.brandao.entityfilemanager.tx.EntityFileTransaction;
 
 import calypte.CacheErrors;
@@ -38,7 +38,7 @@ public class BasicEntityFileSwapper<T> implements Swapper<T>{
 
 	private static final long serialVersionUID = -6380145781552093583L;
 
-	private EntityFileManager efm;
+	private EntityFileManagerConfigurer efm;
 
 	private String name;
 	
@@ -47,7 +47,7 @@ public class BasicEntityFileSwapper<T> implements Swapper<T>{
 	protected Class<T> type;
 	
 	@SuppressWarnings("unchecked")
-	public BasicEntityFileSwapper(EntityFileManager efm, String name, Class<?> type){
+	public BasicEntityFileSwapper(EntityFileManagerConfigurer efm, String name, Class<?> type){
 		this.efm   = efm;
 		this.name  = name;
 		this.type  = (Class<T>) type;
@@ -124,10 +124,11 @@ public class BasicEntityFileSwapper<T> implements Swapper<T>{
 		
 	}
 
-	public synchronized void clear() throws CacheException{
+	public void clear() throws CacheException{
+		efm.truncate(name);
 	}
 
-	public synchronized void destroy() throws CacheException{
+	public void destroy() throws CacheException{
 	}
 
 }
