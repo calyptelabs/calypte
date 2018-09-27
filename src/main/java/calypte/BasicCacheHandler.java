@@ -125,7 +125,10 @@ public class BasicCacheHandler implements CacheHandler{
     		}
     		
 			File path   = new File(config.getDataPath(), "data");
-			File txPath = new File(path, "tx");
+			File txPath = new File(config.getDataPath(), "tx");
+			
+			path.mkdirs();
+			txPath.mkdirs();
 			
 			EntityFileManagerConfigurer efm           = new EntityFileManagerImp();
 			LockProvider lp                           = new LockProviderImp();
@@ -176,7 +179,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    	
 	    	efm.register(new SimpleEntityFileAccess<Block, byte[], BlockEntityFileHeader>(
 	    			name + "_dta", 
-	    			new File(config.getDataPath(), name + "_dta"), 
+	    			new File(efm.getPath(), name + "_dta"), 
 	    			new BlockEntityFileDataHandler(this.memory, (int)config.getDataBlockSize())));
 	    	efm.truncate(name + "_dta");
 	    	
@@ -221,13 +224,13 @@ public class BasicCacheHandler implements CacheHandler{
     		
 	    	efm.register(new SimpleEntityFileAccess<CharNode, byte[], CharNodeEntityFileHeader>(
 	    			name + "_idx", 
-	    			new File(config.getDataPath(), name + "_idx"), 
+	    			new File(efm.getPath(), name + "_idx"), 
 	    			new CharNodeEntityFileDataHandler()));
 	    	efm.truncate(name + "_idx");
 
 	    	efm.register(new SimpleEntityFileAccess<DataMap, byte[], DataMapEntityFileHeader>(
 	    			name + "_idxv", 
-	    			new File(config.getDataPath(), name + "_idxv"), 
+	    			new File(efm.getPath(), name + "_idxv"), 
 	    			new DataMapEntityFileDataHandler()));
 	    	efm.truncate(name + "_idxv");
 	    	
