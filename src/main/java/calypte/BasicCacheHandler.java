@@ -104,6 +104,8 @@ public class BasicCacheHandler implements CacheHandler{
     
     private boolean enabled;
 
+    private volatile long creationTime;
+    
     public BasicCacheHandler(String name, CalypteConfig config) throws CacheException{
     	this.config                 = config;
     	this.memory                 = config.getMemory();
@@ -116,6 +118,7 @@ public class BasicCacheHandler implements CacheHandler{
         this.dataList               = this.createDataBuffer(name, this.entityFileManager, config);
         this.dataMap                = this.createDataMap(name, this.entityFileManager, config);
         this.enabled                = true;
+        this.creationTime              = System.currentTimeMillis();
     }
     
     private EntityFileManagerConfigurer createEntityFileManager(CalypteConfig config){
@@ -513,7 +516,7 @@ public class BasicCacheHandler implements CacheHandler{
     
     public InputStream getStream(String key) throws RecoverException {
         DataMap map = dataMap.get(key);
-    	return map == null? null : getStream(key, map);
+    	return map == null || map.getCreationTime() < creationTime? null : getStream(key, map);
     }
     
     public boolean removeStream(String key) throws StorageException{
@@ -735,15 +738,22 @@ public class BasicCacheHandler implements CacheHandler{
 		return (countRemoved - countWrite) == 0;
 	}
 	
+    public long getCreationTime() {
+    	return creationTime;
+    }
+	
 	public void clear(){
+		/*
 		this.countRead 			= 0;
 		this.countReadData 		= 0;
 		this.countRemoved 		= 0;
 		this.countRemovedData 	= 0;
 		this.countWrite 		= 0;
 		this.countWriteData 	= 0;
-		this.dataList.clear();
-		this.dataMap.clear();
+		*/
+		this.creationTime       = System.currentTimeMillis();
+		//this.dataList.clear();
+		//this.dataMap.clear();
 	}
 	
 	public void destroy(){

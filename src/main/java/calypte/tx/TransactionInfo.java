@@ -140,7 +140,9 @@ public class TransactionInfo implements TransactionCacheHandler {
     	
     	try{
 			DataMap dta = getEntity(manager, cache, key, forUpdate);
-			return dta != null? cache.getStream(key, dta) : null;
+			return dta == null || dta.getCreationTime() < cache.getCreationTime() ? 
+					null : 
+					cache.getStream(key, dta);
     	}
     	catch(RecoverException e){
     		throw e;
@@ -258,6 +260,10 @@ public class TransactionInfo implements TransactionCacheHandler {
 		return cache.size();
 	}
 
+    public long getCreationTime() {
+    	return cache.getCreationTime();
+    }
+	
 	public boolean isEmpty() {
 		return cache.isEmpty();
 	}

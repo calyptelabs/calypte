@@ -158,6 +158,7 @@ public class BasicMapReferenceCollection<K,T>
     public void clear() {
         this.values.clear();
         this.nodes.clear();
+        this.treeNodes.init(this.nodes);
     }
 
     public void destroy() {

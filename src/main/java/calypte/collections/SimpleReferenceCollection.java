@@ -151,10 +151,13 @@ public class SimpleReferenceCollection<T>
     }
     
     public void clear() {
+    	this.length = 0;
 		collection.clear();
     }
 
     public void destroy(){
+    	this.length = 0;
+		collection.clear();
     	collection.destroy();
     }
     

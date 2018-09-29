@@ -76,6 +76,8 @@ public interface CacheHandler extends Serializable{
     
     boolean isDeleteOnExit();
 
+    long getCreationTime();
+    
 	void setDeleteOnExit(boolean deleteOnExit);
 
 	long size();

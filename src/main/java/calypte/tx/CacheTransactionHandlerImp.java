@@ -313,4 +313,8 @@ public class CacheTransactionHandlerImp implements CacheTransactionHandler{
 		transactionInfo.destroy();
 	}
 
+	public long getCreationTime() {
+		return transactionInfo.getCreationTime();
+	}
+
 }
