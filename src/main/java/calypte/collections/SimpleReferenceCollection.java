@@ -17,8 +17,11 @@
 
 package calypte.collections;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -33,7 +36,13 @@ public class SimpleReferenceCollection<T>
 
 	private static final long serialVersionUID = 4658022218986426713L;
 
-	private BlockingQueue<Long> freeAddress;
+	private static volatile long FreeManagerIDS = 0;
+	
+	private static final int GROUP_SIZE = 131072; //1mb
+	
+	private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
+	
+	private FreeManager freeAddress;
 	
 	private SwapCollection<T> collection;
 	
@@ -65,7 +74,7 @@ public class SimpleReferenceCollection<T>
     		throw new NullPointerException("swap");
     	}
 		
-    	this.freeAddress  = new LinkedBlockingQueue<Long>();
+    	this.freeAddress  = new FreeManager(GROUP_SIZE);
     	this.lastPos      = 0;
     	this.lock         = new ReentrantLock();
         this.deleteOnExit = true;
@@ -80,9 +89,9 @@ public class SimpleReferenceCollection<T>
     
 	public long insert(T e) {
 		
-		Long index = this.freeAddress.poll();
+		long index = freeAddress.pop();
 		
-		if(index == null){
+		if(index == -1){
 			lock.lock();
 			try{
 				long i = length++;
@@ -109,7 +118,7 @@ public class SimpleReferenceCollection<T>
 	}
 
 	public boolean remove(long reference) {
-		freeAddress.add(reference);
+		freeAddress.push(reference);
 		return collection.set(reference, null) != null;
 	}
 	
@@ -126,7 +135,7 @@ public class SimpleReferenceCollection<T>
 	}
 
 	public boolean remove(long reference, T oldValue) {
-		freeAddress.add(reference);
+		freeAddress.push(reference);
 		return collection.replace(reference, oldValue, null);
 	}
 	
@@ -173,4 +182,121 @@ public class SimpleReferenceCollection<T>
     	return this.collection.isReadOnly();
 	}
 	
+	private class FreeManager{
+		
+		private String prefixFileName;
+		
+		private long[] data;
+		
+		private int group;
+		
+		private int off;
+		
+		private int groupSize;
+		
+		private FreeManager(int groupSize) {
+			this.data           = new long[groupSize];
+			this.groupSize      = groupSize;
+			this.off            = 0;
+			this.group          = 0;
+			this.prefixFileName = (FreeManagerIDS++) + "_";
+		}
+		
+		public synchronized void push(long value) {
+			
+			if(off == groupSize) {
+				persistData();
+				group++;
+				off = 0;
+			}
+			
+			data[off++] = value;
+		}
+		
+		public synchronized long pop() {
+			
+			if(off == 0)
+				if(group > 0) {
+					group--;
+					off = data.length - 1;
+					loadData();
+				}
+				else
+					return -1;
+			
+			return data[off--];
+		}
+		
+		private void persistData() {
+			File f = new File(TMP_DIR, prefixFileName + group);
+			FileOutputStream stream         = null;
+			ObjectOutputStream objectStream = null;
+			try {
+				stream       = new FileOutputStream(f);
+				objectStream = new ObjectOutputStream(stream);
+				
+				objectStream.writeObject(data);
+				objectStream.flush();
+			}
+			catch(Throwable e) {
+				throw new IllegalStateException(e);
+			}
+			finally {
+				if(objectStream != null){
+					try {
+						objectStream.close();
+					}
+					catch(Throwable e) {
+						//suppress exception
+					}
+				}
+				
+				if(stream != null){
+					try {
+						stream.close();
+					}
+					catch(Throwable e) {
+						//suppress exception
+					}
+				}
+			}
+		}
+		
+		private void loadData() {
+			File f = new File(TMP_DIR, prefixFileName + group);
+			FileInputStream stream          = null;
+			ObjectInputStream objectStream  = null;
+			try {
+				stream       = new FileInputStream(f);
+				objectStream = new ObjectInputStream(stream);
+				
+				data = (long[])objectStream.readObject();
+			}
+			catch(Throwable e) {
+				throw new IllegalStateException(e);
+			}
+			finally {
+				if(objectStream != null){
+					try {
+						objectStream.close();
+					}
+					catch(Throwable e) {
+						//suppress exception
+					}
+				}
+				
+				if(stream != null){
+					try {
+						stream.close();
+					}
+					catch(Throwable e) {
+						//suppress exception
+					}
+				}
+				
+				f.delete();
+			}
+		}
+		
+	}
 }
