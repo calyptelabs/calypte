@@ -224,7 +224,7 @@ public class SimpleReferenceCollection<T>
 				else
 					return -1;
 			
-			return data[off--];
+			return data[--off];
 		}
 		
 		private void persistData() {
