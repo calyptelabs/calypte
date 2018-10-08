@@ -50,7 +50,8 @@ public class HugeArrayList<T>
             1);
     }
 
-    public HugeArrayList(
+    @SuppressWarnings("unchecked")
+	public HugeArrayList(
             int maxCapacityElements,
             double clearFactorElements, 
             double fragmentFactorElements,
@@ -68,7 +69,7 @@ public class HugeArrayList<T>
                 maxCapacityElements, 
                 clearFactorElements, 
                 fragmentFactorElements,
-                swap,
+                new Swapper[] {swap},
                 quantityClearThread,
                 1);
     }

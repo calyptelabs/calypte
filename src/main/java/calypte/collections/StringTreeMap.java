@@ -31,7 +31,7 @@ public class StringTreeMap<T> extends TreeMap<String, T> {
             int maxCapacityNodes,
             double clearFactorNodes, 
             double fragmentFactorNodes,
-            Swapper swap,
+            Swapper[] swap,
             int quantitySwaperThreadNodes,
             int subListsNodes,
             int maxCapacityElements,

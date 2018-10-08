@@ -169,6 +169,7 @@ public class BasicCacheHandler implements CacheHandler{
     	}
     }
     
+    @SuppressWarnings("unchecked")
     private FlushableReferenceCollection<Block> createDataBuffer(String name, 
     		EntityFileManagerConfigurer efm, CalypteConfig config){
     	try{
@@ -180,18 +181,24 @@ public class BasicCacheHandler implements CacheHandler{
 	    						config.getDataBlockSize(),
 	    						config.getDataSwapFactor());
 	    	
-	    	efm.register(new SimpleEntityFileAccess<Block, byte[], BlockEntityFileHeader>(
-	    			name + "_dta", 
-	    			new File(efm.getPath(), name + "_dta"), 
-	    			new BlockEntityFileDataHandler(this.memory, (int)config.getDataBlockSize())));
-	    	efm.truncate(name + "_dta");
+	    	BasicEntityFileSwapper<Block>[] swappers = new BasicEntityFileSwapper[dataInfo.getSubLists()];
+	    	
+	    	for(int i=0;i<dataInfo.getSubLists();i++) {
+		    	efm.register(new SimpleEntityFileAccess<Block, byte[], BlockEntityFileHeader>(
+		    			name + i + "_dta", 
+		    			new File(efm.getPath(), name + i + "_dta"), 
+		    			new BlockEntityFileDataHandler(this.memory, (int)config.getDataBlockSize())));
+		    	efm.truncate(name + i + "_dta");
+		    	
+		    	swappers[i] = new BasicEntityFileSwapper<Block>(efm, name + i + "_dta", Block.class);
+	    	}
 	    	
 	    	FlushableReferenceCollection<Block> dataList =
 	                new FlushableReferenceCollectionImp<Block>(
 	                dataInfo.getMaxCapacityElements(),
 	                dataInfo.getClearFactorElements(),
 	                dataInfo.getFragmentFactorElements(),
-	                new BasicEntityFileSwapper<Block>(efm, name + "_dta", Block.class),
+	                swappers,
 	                config.getSwapperThread(),
 	                dataInfo.getSubLists()
 	                );
@@ -204,11 +211,12 @@ public class BasicCacheHandler implements CacheHandler{
     	}
     }
     
-    @SuppressWarnings("rawtypes")
+    @SuppressWarnings({ "rawtypes", "unchecked" })
 	private MapReferenceCollection<String, DataMap> createDataMap(
     		String name, EntityFileManagerConfigurer efm, CalypteConfig config){
 
     	try{
+    		//nós da arvore de busca
     		HugeListInfo nodeInfo = 
 	    			HugeListCalculator
 	    				.calculate(
@@ -216,7 +224,20 @@ public class BasicCacheHandler implements CacheHandler{
 	    						config.getNodesPageSize(),
 	    						NODE_BINARY_SIZE, 
 	    						config.getNodesSwapFactor());
+
+	    	BasicEntityFileSwapper<TreeNode<DataMap>>[] nodesSwappers = new BasicEntityFileSwapper[nodeInfo.getSubLists()];
+	    	
+	    	for(int i=0;i<nodeInfo.getSubLists();i++) {
+		    	efm.register(new SimpleEntityFileAccess<CharNode, byte[], CharNodeEntityFileHeader>(
+		    			name + i + "_idx", 
+		    			new File(efm.getPath(), name + i + "_idx"), 
+		    			new CharNodeEntityFileDataHandler()));
+		    	efm.truncate(name + i + "_idx");
+		    	
+		    	nodesSwappers[i] = new BasicEntityFileSwapper<TreeNode<DataMap>>(efm, name + i + "_idx", TreeNode.class);
+	    	}
     		
+	    	//índice dos itens
     		HugeListInfo indexInfo = 
 	    			HugeListCalculator
 	    				.calculate(
@@ -225,30 +246,31 @@ public class BasicCacheHandler implements CacheHandler{
 	    						INDEX_BINARY_SIZE, 
 	    						config.getIndexSwapFactor());
     		
-	    	efm.register(new SimpleEntityFileAccess<CharNode, byte[], CharNodeEntityFileHeader>(
-	    			name + "_idx", 
-	    			new File(efm.getPath(), name + "_idx"), 
-	    			new CharNodeEntityFileDataHandler()));
-	    	efm.truncate(name + "_idx");
 
-	    	efm.register(new SimpleEntityFileAccess<DataMap, byte[], DataMapEntityFileHeader>(
-	    			name + "_idxv", 
-	    			new File(efm.getPath(), name + "_idxv"), 
-	    			new DataMapEntityFileDataHandler()));
-	    	efm.truncate(name + "_idxv");
+	    	BasicEntityFileSwapper<DataMap>[] indexSwappers = new BasicEntityFileSwapper[indexInfo.getSubLists()];
+	    	
+	    	for(int i=0;i<indexInfo.getSubLists();i++) {
+		    	efm.register(new SimpleEntityFileAccess<DataMap, byte[], DataMapEntityFileHeader>(
+		    			name + i + "_idxv", 
+		    			new File(efm.getPath(), name + i + "_idxv"), 
+		    			new DataMapEntityFileDataHandler()));
+		    	efm.truncate(name + i + "_idxv");
+		    	
+		    	indexSwappers[i] = new BasicEntityFileSwapper<DataMap>(efm, name + i + "_idxv", DataMap.class);
+	    	}
 	    	
     		MapReferenceCollection<String, DataMap> dataMap =
             		new BasicMapReferenceCollection<String, DataMap>(
                             nodeInfo.getMaxCapacityElements(),
                             nodeInfo.getClearFactorElements(),
                             nodeInfo.getFragmentFactorElements(),
-                            new BasicEntityFileSwapper<TreeNode<DataMap>>(efm, name + "_idx", TreeNode.class),
+                            nodesSwappers,
                             config.getSwapperThread(), 
                             nodeInfo.getSubLists(), 
                             indexInfo.getMaxCapacityElements(),
                             indexInfo.getClearFactorElements(),
                             indexInfo.getFragmentFactorElements(),
-                            new BasicEntityFileSwapper<DataMap>(efm, name + "_idxv", DataMap.class),
+                            indexSwappers,
                             config.getSwapperThread(), 
                             indexInfo.getSubLists(), 
                             new StringTreeNodes<DataMap>()

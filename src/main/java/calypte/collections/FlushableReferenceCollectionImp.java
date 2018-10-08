@@ -47,7 +47,7 @@ public class FlushableReferenceCollectionImp<T>
             int maxCapacityElements,
             double clearFactorElements, 
             double fragmentFactorElements,
-            Swapper<T> swap,
+            Swapper<T>[] swap,
             int quantityClearThread, 
             int lists) {
     
@@ -60,7 +60,7 @@ public class FlushableReferenceCollectionImp<T>
                         maxCapacityElements, 
                         clearFactorElements, 
                         fragmentFactorElements,
-                        swap,
+                        swap[i],
                         quantityClearThread);
     		
     	}
