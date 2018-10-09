@@ -37,18 +37,18 @@ public interface TreeNodes<T> extends Serializable{
 
     TreeNode<T> getFirst(ReferenceCollection<TreeNode<T>> nodes);
     
-    T getValue(ReferenceCollection<T> values, TreeNode<T> node);
+    T getValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node);
     
-    T setValue(ReferenceCollection<T> values, TreeNode<T> node, T value);
+    T setValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value);
 
-    boolean replaceValue(ReferenceCollection<T> values, TreeNode<T> node, T oldValue, T value);
+    boolean replaceValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T oldValue, T value);
 
-    T replaceValue(ReferenceCollection<T> values, TreeNode<T> node, T value);
+    T replaceValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value);
     
-    T removeValue(ReferenceCollection<T> values, TreeNode<T> node);
+    T removeValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node);
  
-    T putIfAbsentValue(ReferenceCollection<T> values, TreeNode<T> node, T value);
+    T putIfAbsentValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value);
     
-    boolean removeValue(ReferenceCollection<T> values, TreeNode<T> node, T oldValue);
+    boolean removeValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T oldValue);
     
 }

@@ -54,70 +54,97 @@ public class StringTreeNodes<T> implements TreeNodes<T>{
         return k.pos == k.limit;
     }
 
-    public T getValue(ReferenceCollection<T> values, TreeNode<T> node){
-		return node.getValue(values);
-    }
-    
-    public T setValue(ReferenceCollection<T> values, TreeNode<T> node, T value){
+    public T getValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node){
     	Lock lock = this.locks.getLock(node.getId());
     	lock.lock();
     	try{
-    		return node.setValue(values, value);
+    		//node = nodes.get(node.getId());
+    		return node.getValue(values);
+    		//nodes.set(node.getId(), node);
     	}
     	finally{
     		lock.unlock();
     	}
     }
     
-    public boolean replaceValue(ReferenceCollection<T> values, TreeNode<T> node, T oldValue, T value){
+    public T setValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value){
     	Lock lock = this.locks.getLock(node.getId());
     	lock.lock();
     	try{
-    		return node.replaceValue(values, oldValue, value);
-    	}
-    	finally{
-    		lock.unlock();
-    	}
-    }
-
-    public T replaceValue(ReferenceCollection<T> values, TreeNode<T> node, T value){
-    	Lock lock = this.locks.getLock(node.getId());
-    	lock.lock();
-    	try{
-    		return node.replaceValue(values, value);
-    	}
-    	finally{
-    		lock.unlock();
-    	}
-    }
-
-    public T putIfAbsentValue(ReferenceCollection<T> values, TreeNode<T> node, T value){
-    	Lock lock = this.locks.getLock(node.getId());
-    	lock.lock();
-    	try{
-    		return node.putIfAbsentValue(values, value);
+    		node = nodes.get(node.getId());
+    		T r = node.setValue(values, value);
+    		nodes.set(node.getId(), node);
+    		return r;
     	}
     	finally{
     		lock.unlock();
     	}
     }
     
-    public T removeValue(ReferenceCollection<T> values, TreeNode<T> node) {
+    public boolean replaceValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T oldValue, T value){
     	Lock lock = this.locks.getLock(node.getId());
     	lock.lock();
     	try{
-			return node.removeValue(values);
+    		node = nodes.get(node.getId());
+    		boolean r = node.replaceValue(values, oldValue, value);
+    		nodes.set(node.getId(), node);
+    		return r;
     	}
     	finally{
     		lock.unlock();
     	}
     }
 
-    public boolean removeValue(ReferenceCollection<T> values, TreeNode<T> node, T oldValue) {
+    public T replaceValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value){
     	Lock lock = this.locks.getLock(node.getId());
     	lock.lock();
     	try{
-    		return node.removeValue(values, oldValue);
+    		node = nodes.get(node.getId());
+    		T r = node.replaceValue(values, value);
+    		nodes.set(node.getId(), node);
+    		return r;
+    	}
+    	finally{
+    		lock.unlock();
+    	}
+    }
+
+    public T putIfAbsentValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value){
+    	Lock lock = this.locks.getLock(node.getId());
+    	lock.lock();
+    	try{
+    		node = nodes.get(node.getId());
+    		T r = node.putIfAbsentValue(values, value);
+    		nodes.set(node.getId(), node);
+    		return r;
+    	}
+    	finally{
+    		lock.unlock();
+    	}
+    }
+    
+    public T removeValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node) {
+    	Lock lock = this.locks.getLock(node.getId());
+    	lock.lock();
+    	try{
+    		node = nodes.get(node.getId());
+			T r = node.removeValue(values);
+    		nodes.set(node.getId(), node);
+    		return r;
+    	}
+    	finally{
+    		lock.unlock();
+    	}
+    }
+
+    public boolean removeValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T oldValue) {
+    	Lock lock = this.locks.getLock(node.getId());
+    	lock.lock();
+    	try{
+    		node = nodes.get(node.getId());
+    		boolean r = node.removeValue(values, oldValue);
+    		nodes.set(node.getId(), node);
+    		return r;
     	}
     	finally{
     		lock.unlock();

@@ -192,58 +192,58 @@ public class BasicMapReferenceCollection<K,T>
     private T put(TreeMapKey key, TreeNode<T> node, T value){
         
         if(!this.treeNodes.isEquals(key, node)){
-            TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, false);
+            TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
             return this.put(key, next, value);
         }
         else{
-        	return this.treeNodes.setValue(this.values, node, value);
+        	return this.treeNodes.setValue(nodes, values, node, value);
         }
     }
 
     private boolean replace(TreeMapKey key, TreeNode<T> node, T oldValue, T value){
         
         if(!this.treeNodes.isEquals(key, node)){
-            TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, false);
+            TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
             return this.replace(key, next, oldValue, value);
         }
         else{
-        	return this.treeNodes.replaceValue(values, node, oldValue, value);
+        	return this.treeNodes.replaceValue(nodes, values, node, oldValue, value);
         }
     }
 
     private T replace(TreeMapKey key, TreeNode<T> node, T value){
         
         if(!this.treeNodes.isEquals(key, node)){
-            TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, false);
+            TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
             return this.replace(key, next, value);
         }
         else{
-        	return this.treeNodes.replaceValue(values, node, value);
+        	return this.treeNodes.replaceValue(nodes, values, node, value);
         }
     }
 
     private T putIfAbsent(TreeMapKey key, TreeNode<T> node, T value){
         
         if(!this.treeNodes.isEquals(key, node)){
-            TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, false);
+            TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
             return this.putIfAbsent(key, next, value);
         }
         else{
-        	return this.treeNodes.putIfAbsentValue(values, node, value);
+        	return this.treeNodes.putIfAbsentValue(nodes, values, node, value);
         }
     }
     
     private T get(TreeMapKey key, TreeNode<T> node){
         
         if(!this.treeNodes.isEquals(key, node)){
-            TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, true);
+            TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, true);
             if(next == null)
                 return null;
             else
                 return this.get(key, next);
         }
         else
-            return this.treeNodes.getValue(this.values, node);
+            return this.treeNodes.getValue(nodes, values, node);
         
     }
 
@@ -257,7 +257,7 @@ public class BasicMapReferenceCollection<K,T>
                 return (T)remove(key, next);
         }
         else{
-        	return this.treeNodes.removeValue(this.values, node);
+        	return this.treeNodes.removeValue(nodes, values, node);
         }
         
     }
@@ -272,7 +272,7 @@ public class BasicMapReferenceCollection<K,T>
                 return remove(key, next, oldValue);
         }
         else{
-        	return this.treeNodes.removeValue(this.values, node, oldValue);
+        	return this.treeNodes.removeValue(nodes, values, node, oldValue);
         }
         
     }

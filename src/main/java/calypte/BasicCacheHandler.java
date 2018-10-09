@@ -20,6 +20,7 @@ package calypte;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.brandao.entityfilemanager.EntityFileManagerConfigurer;
 import org.brandao.entityfilemanager.EntityFileManagerImp;
@@ -82,23 +83,23 @@ public class BasicCacheHandler implements CacheHandler{
     
     private int maxLengthKey;
     
-    private volatile long modCount;
+    private AtomicLong modCount;
     
     protected EntityFileManagerConfigurer entityFileManager;
     
 	protected CalypteConfig config;
     
-    volatile long countRead;
+    AtomicLong countRead;
     
-    volatile long countWrite;
+    AtomicLong countWrite;
     
-    volatile long countRemoved;
+    AtomicLong countRemoved;
     
-    volatile long countReadData;
+    AtomicLong countReadData;
 
-    volatile long countWriteData;
+    AtomicLong countWriteData;
 
-    volatile long countRemovedData;
+    AtomicLong countRemovedData;
     
     private boolean deleteOnExit;
     
@@ -109,7 +110,7 @@ public class BasicCacheHandler implements CacheHandler{
     public BasicCacheHandler(String name, CalypteConfig config) throws CacheException{
     	this.config                 = config;
     	this.memory                 = config.getMemory();
-        this.modCount               = 0;
+        this.modCount               = new AtomicLong();
         this.segmentSize            = (int)config.getDataBlockSize();
         this.maxBytesToStorageEntry = config.getMaxSizeEntry();
         this.maxLengthKey           = config.getMaxSizeKey();
@@ -118,7 +119,13 @@ public class BasicCacheHandler implements CacheHandler{
         this.dataList               = this.createDataBuffer(name, this.entityFileManager, config);
         this.dataMap                = this.createDataMap(name, this.entityFileManager, config);
         this.enabled                = true;
-        this.creationTime              = System.currentTimeMillis();
+        this.creationTime           = System.currentTimeMillis();
+        this.countRead              = new AtomicLong();
+        this.countWrite             = new AtomicLong();
+        this.countRemoved           = new AtomicLong();
+        this.countReadData          = new AtomicLong();
+        this.countWriteData         = new AtomicLong();
+        this.countRemovedData       = new AtomicLong();
     }
     
     private EntityFileManagerConfigurer createEntityFileManager(CalypteConfig config){
@@ -329,7 +336,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
         
         //Todo item inserido tem que ter uma nova id. Mesmo que ela exista.
-        map.setId(modCount++);
+        map.setId(modCount.incrementAndGet());
 
         try{
             //Registra os dados no buffer de dados.
@@ -368,11 +375,11 @@ public class BasicCacheHandler implements CacheHandler{
         finally{
 	    	if(oldMap != null){
 	    		this.releaseSegments(oldMap);
-	            this.countRemoved++;
+	            this.countRemoved.incrementAndGet();
 	    	}
         }
         
-        this.countWrite++;
+        this.countWrite.incrementAndGet();
         return oldMap != null;
     }
 
@@ -397,7 +404,7 @@ public class BasicCacheHandler implements CacheHandler{
         map.setTimeToLive(timeToLive);
         
         //Toda item inserido tem que ter uma nova id. Mesmo que ele exista.
-        map.setId(this.modCount++);
+        map.setId(modCount.incrementAndGet());
 
         try{
             //Registra os dados no buffer de dados.
@@ -440,7 +447,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
         
         if(oldMap != null){
-            this.countWrite++;
+            this.countWrite.incrementAndGet();
         	return true;
         }
         else
@@ -469,7 +476,7 @@ public class BasicCacheHandler implements CacheHandler{
         map.setTimeToLive(timeToLive);
         
         //Toda item inserido tem que ter uma nova id. Mesmo que ele exista.
-        map.setId(this.modCount++);
+        map.setId(modCount.incrementAndGet());
 
         try{
             //Registra os dados no buffer de dados.
@@ -517,7 +524,7 @@ public class BasicCacheHandler implements CacheHandler{
         	in = this.getStream(key, oldMap);
         }
         else{
-        	this.countWrite++;
+        	this.countWrite.incrementAndGet();
         }
         
         if(oldMap != null){
@@ -578,7 +585,7 @@ public class BasicCacheHandler implements CacheHandler{
     public void remove(String key, DataMap data){
     	if(this.dataMap.remove(key, data)){
 	    	this.releaseSegments(data);
-	        countRemoved++;
+	        countRemoved.incrementAndGet();
     	}
     }
     
@@ -607,7 +614,7 @@ public class BasicCacheHandler implements CacheHandler{
     public InputStream getStream(String key, DataMap map) throws RecoverException {
         
         try{
-            countRead++;
+            countRead.incrementAndGet();
 
         	//Verifica se o item já expirou
         	if(map.isDead()){
@@ -626,7 +633,7 @@ public class BasicCacheHandler implements CacheHandler{
         	
         	int readData     = 0;
             Block[] segments = new Block[map.getSegments()];
-            Block current    = dataList.get(map.getFirstSegment());
+            Block current    = map.getFirstSegment() < 0? null : dataList.get(map.getFirstSegment());
             int i            = 0;
             
             while(current != null){
@@ -645,7 +652,15 @@ public class BasicCacheHandler implements CacheHandler{
             	i++;
             }
             
-            countReadData += readData;
+            if(readData <= 0) {
+            	return null;
+            }
+            
+            if(map.getLength() != readData) {
+                throw new RecoverException(CacheErrors.ERROR_1021);
+            }
+            
+            countReadData.addAndGet(readData);
             
             return new CacheInputStream(this, map, segments, segmentSize);
         }
@@ -653,6 +668,7 @@ public class BasicCacheHandler implements CacheHandler{
             return null;
         }
         catch(Throwable e){
+        	e.printStackTrace();
             throw new RecoverException(e, CacheErrors.ERROR_1021);
         }
     }
@@ -687,7 +703,7 @@ public class BasicCacheHandler implements CacheHandler{
                 lastSegment = segment;
             }
 
-            this.countWriteData += writeData;
+            this.countWriteData.addAndGet(writeData);
             
     		if(writeData > this.maxBytesToStorageEntry){
                 throw new StorageException(CacheErrors.ERROR_1007);
@@ -697,19 +713,19 @@ public class BasicCacheHandler implements CacheHandler{
             map.setSegments(index);
         }
         catch(StorageException e){
-            this.countRemovedData += writeData;
+            this.countRemovedData.addAndGet(writeData);
             this.releaseSegments(map);
             throw e;
         }
         catch(IOException e){
-            this.countRemovedData += writeData;
+            this.countRemovedData.addAndGet(writeData);
             this.releaseSegments(map);
             throw new StorageException(e, CacheErrors.ERROR_1014);
         }
     }
 
     public long getNextModCount(){
-    	return modCount++;
+    	return modCount.incrementAndGet();
     }
     
 	public CalypteConfig getConfig() {
@@ -717,27 +733,27 @@ public class BasicCacheHandler implements CacheHandler{
 	}
     
     public long getCountRead(){
-        return this.countRead;
+        return this.countRead.longValue();
     }
 
     public long getCountWrite(){
-        return this.countWrite;
+        return this.countWrite.longValue();
     }
 
     public long getCountRemoved() {
-		return countRemoved;
+		return countRemoved.longValue();
 	}
 
     public long getCountReadData() {
-        return countReadData;
+        return countReadData.longValue();
     }
     
     public long getCountWriteData() {
-        return countWriteData;
+        return countWriteData.longValue();
     }
 
     public long getCountRemovedData() {
-        return countRemovedData;
+        return countRemovedData.longValue();
     }
     
     public boolean isDeleteOnExit() {
@@ -749,7 +765,7 @@ public class BasicCacheHandler implements CacheHandler{
 	}
 
 	public long size() {
-		return countRemoved - countWrite;
+		return countRemoved.longValue() - countWrite.longValue();
 	}
 
 	public int getMaxKeySize() {
@@ -757,7 +773,7 @@ public class BasicCacheHandler implements CacheHandler{
 	}
 	
 	public boolean isEmpty() {
-		return (countRemoved - countWrite) == 0;
+		return (countRemoved.longValue() - countWrite.longValue()) == 0;
 	}
 	
     public long getCreationTime() {
