@@ -55,16 +55,14 @@ public class StringTreeNodes<T> implements TreeNodes<T>{
     }
 
     public T getValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node){
-    	Lock lock = this.locks.getLock(node.getId());
-    	lock.lock();
-    	try{
-    		//node = nodes.get(node.getId());
+    	//Lock lock = this.locks.getLock(node.getId());
+    	//lock.lock();
+    	//try{
     		return node.getValue(values);
-    		//nodes.set(node.getId(), node);
-    	}
-    	finally{
-    		lock.unlock();
-    	}
+    	//}
+    	//finally{
+    	//	lock.unlock();
+    	//}
     }
     
     public T setValue(ReferenceCollection<TreeNode<T>> nodes, ReferenceCollection<T> values, TreeNode<T> node, T value){
