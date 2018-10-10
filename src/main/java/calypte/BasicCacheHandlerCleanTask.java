@@ -17,6 +17,8 @@
 
 package calypte;
 
+import java.util.concurrent.TimeUnit;
+
 import calypte.CacheHandler.ResultFind;
 
 /**
@@ -35,6 +37,7 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 	public void run() {
 		while(!handler.isDestroyed()) {
 			try {
+				Thread.sleep(TimeUnit.SECONDS.toMillis(60));
 				clean();
 			}
 			catch(Throwable e) {
