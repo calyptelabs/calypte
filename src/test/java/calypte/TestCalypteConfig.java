@@ -17,8 +17,7 @@
 
 package calypte;
 
-import calypte.CalypteConfig;
-import calypte.memory.UnsafeMemory;
+import calypte.memory.DirectMemory;
 
 /**
  * 
@@ -46,7 +45,7 @@ public class TestCalypteConfig
         this.maxSizeKey      = 100;
         this.swapperThread   = 4;
         this.dataPath        = "/mnt/calypte";
-        this.memory          = new UnsafeMemory();//new HeapMemory();
+        this.memory          = new DirectMemory();
 	}
 	
 }

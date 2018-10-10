@@ -38,10 +38,14 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 				clean();
 			}
 			catch(Throwable e) {
-				e.printStackTrace();
+				if(!handler.isDestroyed()) {
+					e.printStackTrace();
+				}
 			}
 		}
 		
+		//gc
+		handler = null;
 	}
 
 	private void clean() {

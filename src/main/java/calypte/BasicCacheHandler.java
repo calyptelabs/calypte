@@ -832,10 +832,10 @@ public class BasicCacheHandler implements CacheHandler{
 	
 	public void destroy(){
 		if(enabled){
+			enabled = false;
 			dataList.destroy();
 			dataMap.destroy();
 			entityFileManager.destroy();
-			enabled = false;
 		}
 	}
 	
