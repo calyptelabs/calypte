@@ -19,13 +19,10 @@ package calypte;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.HashSet;
+import java.util.Set;
 
-import calypte.CalypteConfig;
-import calypte.Cache;
-import calypte.CacheErrors;
-import calypte.ConcurrentCache;
-import calypte.RecoverException;
-import calypte.StorageException;
+import calypte.CacheHandler.ResultFind;
 import junit.framework.TestCase;
 
 /**
@@ -258,6 +255,44 @@ public class CacheTest extends TestCase{
             }
         }
         
-    }    
+    }
+    
+    public void testFind() {
+
+        int itens = 10;
+        
+        for(int i=0;i<itens;i++){
+            try{
+                String key = String.valueOf(i) + "-index-";
+                String value = key + "-index-";
+                cache.put(key, value, 0, 0);
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+
+        final Set<String> result = new HashSet<String>();
+        
+        ((ConcurrentCache)cache).cacheHandler.find(null, new ResultFind() {
+			
+			public void found(String key, CacheHandler cache) {
+				result.add(key);
+			}
+			
+		});
+        
+        for(int i=0;i<itens;i++){
+            try{
+                String key = String.valueOf(i) + "-index-";
+                assertTrue(result.contains(key));
+                
+            }
+            catch(Exception e){
+                e.printStackTrace();
+            }
+        }
+        
+    }
     
 }

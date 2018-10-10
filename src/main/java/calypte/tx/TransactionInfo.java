@@ -71,6 +71,10 @@ public class TransactionInfo implements TransactionCacheHandler {
 		this.timeout           = timeout;
 	}
 	
+	public void find(String key, ResultFind result) {
+		cache.find(key, result);
+	}
+	
 	/* métodos de armazenamento */
 	
 	public boolean replaceStream(String key, InputStream inputData, long timeToLive, long timeToIdle) throws StorageException{
@@ -162,6 +166,10 @@ public class TransactionInfo implements TransactionCacheHandler {
     
     /* métodos de remoção */
     
+	public boolean removeIfInvalid(String key) throws StorageException {
+		return cache.removeIfInvalid(key);
+	}
+	
     public boolean removeStream(String key) throws StorageException{
     	
     	try{
@@ -403,5 +411,9 @@ public class TransactionInfo implements TransactionCacheHandler {
     	
     	managed.add(key);
     }
+
+	public boolean isDestroyed() {
+		return cache.isDestroyed();
+	}
 
 }

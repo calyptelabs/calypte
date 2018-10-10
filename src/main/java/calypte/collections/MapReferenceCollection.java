@@ -17,6 +17,8 @@
 
 package calypte.collections;
 
+import calypte.collections.treehugemap.TreeNode;
+
 /**
  * 
  * @author Ribeiro
@@ -26,6 +28,8 @@ package calypte.collections;
  */
 public interface MapReferenceCollection<K,T> {
 
+    void find(Find<T> f);
+	
     T put(K key, T element);
 
     boolean replace(K key, T oldElement, T element);
@@ -53,5 +57,20 @@ public interface MapReferenceCollection<K,T> {
     void setReadOnly(boolean value);
     
     boolean isReadOnly();
+
+    public static interface Find<T> {
+    	
+    	void found(T value);
+    	
+    	boolean accept();
+    	
+		boolean acceptNodeKey(Object key);
+    	
+    	void beforeNextNode(Object key, TreeNode<T> node);
+    	
+    	void afterNextNode(Object key, TreeNode<T> node);
+    	
+    }
+    
     
 }

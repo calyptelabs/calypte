@@ -20,10 +20,10 @@ package calypte.tx;
 import java.io.InputStream;
 import java.io.Serializable;
 
-import calypte.CalypteConfig;
 import calypte.CacheErrors;
 import calypte.CacheException;
 import calypte.CacheHandler;
+import calypte.CalypteConfig;
 import calypte.DataMap;
 import calypte.RecoverException;
 import calypte.StorageException;
@@ -190,6 +190,10 @@ public class CacheTransactionHandlerImp implements CacheTransactionHandler{
 		
 	}
 
+	public void find(String key, ResultFind result) {
+		transactionInfo.find(key, result);
+	}
+	
 	public InputStream getStream(String key, boolean forUpdate)
 			throws RecoverException {
 		return transactionInfo.getStream(key, forUpdate);
@@ -214,6 +218,10 @@ public class CacheTransactionHandlerImp implements CacheTransactionHandler{
 		return transactionInfo.getStream(key);
 	}
 
+	public boolean removeIfInvalid(String key) throws StorageException {
+		return transactionInfo.removeIfInvalid(key);
+	}
+	
 	public boolean removeStream(String key) throws StorageException {
 		return transactionInfo.removeStream(key);
 	}
@@ -315,6 +323,10 @@ public class CacheTransactionHandlerImp implements CacheTransactionHandler{
 
 	public long getCreationTime() {
 		return transactionInfo.getCreationTime();
+	}
+
+	public boolean isDestroyed() {
+		return transactionInfo.isDestroyed();
 	}
 
 }

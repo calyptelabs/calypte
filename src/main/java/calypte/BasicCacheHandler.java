@@ -49,6 +49,7 @@ import calypte.collections.EntityFileSwapper;
 import calypte.collections.FlushableReferenceCollection;
 import calypte.collections.FlushableReferenceCollectionImp;
 import calypte.collections.MapReferenceCollection;
+import calypte.collections.MapReferenceCollection.Find;
 import calypte.collections.Swapper;
 import calypte.collections.treehugemap.CharNode;
 import calypte.collections.treehugemap.CharNodeUtil;
@@ -110,6 +111,8 @@ public class BasicCacheHandler implements CacheHandler{
 
     private volatile long creationTime;
     
+    private BasicCacheHandlerCleanTask cleanTask;
+    
     public BasicCacheHandler(String name, CalypteConfig config) throws CacheException{
     	this.config                 = config;
     	this.memory                 = config.getMemory();
@@ -129,6 +132,10 @@ public class BasicCacheHandler implements CacheHandler{
         this.countReadData          = new AtomicLong();
         this.countWriteData         = new AtomicLong();
         this.countRemovedData       = new AtomicLong();
+        this.cleanTask              = new BasicCacheHandlerCleanTask(this);
+        
+        Thread th = new Thread(null, this.cleanTask, "clean cache task");
+        th.start();
     }
     
     private EntityFileManagerConfigurer createEntityFileManager(CalypteConfig config){
@@ -300,6 +307,10 @@ public class BasicCacheHandler implements CacheHandler{
     		throw new IllegalArgumentException("fail data map", e);
     	}
     	
+    }
+    
+    public void find(String key, ResultFind result) {
+    	dataMap.find(new DataMapResultFind(key, result));
     }
     
     public boolean putStream(String key, InputStream inputData, 
@@ -557,6 +568,22 @@ public class BasicCacheHandler implements CacheHandler{
     	return map == null || map.getCreationTime() < creationTime? null : getStream(key, map);
     }
     
+	public boolean removeIfInvalid(String key) throws StorageException {
+        try{
+        	DataMap data = this.dataMap.get(key);
+
+            if(data != null && (data.getCreationTime() < creationTime || data.isDead())){
+            	remove(key, data);
+            	return true;
+            }
+            else
+                return false;
+        }
+        catch(Throwable e){
+            throw new StorageException(e, CacheErrors.ERROR_1022);
+        }
+	}
+    
     public boolean removeStream(String key) throws StorageException{
         
         try{
@@ -812,6 +839,10 @@ public class BasicCacheHandler implements CacheHandler{
 		}
 	}
 	
+	public boolean isDestroyed() {
+		return !enabled;
+	}
+	
     protected void finalize() throws Throwable{
     	try{
     		if(deleteOnExit){
@@ -823,4 +854,52 @@ public class BasicCacheHandler implements CacheHandler{
     	}
     }
 	
+    public class DataMapResultFind 
+    	implements ResultFind, Find<DataMap>{
+
+    	private ResultFind original;
+    	
+    	public DataMapResultFind(String key, ResultFind original) {
+    		this.original   = original;
+    		this.chars      = key == null? null : key.toCharArray();
+    		this.index      = 0;
+    		this.currentKey = new StringBuilder();
+    	}
+    	
+		public void found(String key, CacheHandler cache) {
+			original.found(key, cache);
+		}
+
+		/* map */
+		
+		private char[] chars;
+		
+		private int index;
+		
+		private StringBuilder currentKey;
+		
+		public void found(DataMap value) {
+			found(currentKey.toString(), BasicCacheHandler.this);
+		}
+
+		public boolean accept() {
+			return chars == null? true : index == chars.length;
+		}
+
+		public boolean acceptNodeKey(Object key) {
+			return chars == null? true : key.equals(chars[index]);
+		}
+		
+		public void beforeNextNode(Object key, TreeNode<DataMap> node) {
+			currentKey.append(key);
+			index++;
+		}
+
+		public void afterNextNode(Object key, TreeNode<DataMap> node) {
+			currentKey.setLength(currentKey.length() - 1);
+			index--;
+		}
+    	
+    }
+
 }

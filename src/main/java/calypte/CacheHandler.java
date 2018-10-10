@@ -27,6 +27,8 @@ import java.io.Serializable;
  */
 public interface CacheHandler extends Serializable{
     
+	void find(String key, ResultFind result);
+	
     boolean putStream(String key, InputStream inputData, 
     		long timeToLive, long timeToIdle) throws StorageException;
 
@@ -37,6 +39,8 @@ public interface CacheHandler extends Serializable{
     		long timeToLive, long timeToIdle) throws StorageException;
     
     InputStream getStream(String key) throws RecoverException;
+    
+    boolean removeIfInvalid(String key) throws StorageException;
     
     boolean removeStream(String key) throws StorageException;
     
@@ -80,6 +84,8 @@ public interface CacheHandler extends Serializable{
     
 	void setDeleteOnExit(boolean deleteOnExit);
 
+	boolean isDestroyed();
+	
 	long size();
 	
 	boolean isEmpty();
@@ -88,4 +94,9 @@ public interface CacheHandler extends Serializable{
 	
 	void destroy();
 	
+	public interface ResultFind{
+		
+		void found(String key, CacheHandler cache);
+		
+	}
 }

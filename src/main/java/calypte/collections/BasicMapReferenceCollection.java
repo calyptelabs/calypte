@@ -17,9 +17,6 @@
 
 package calypte.collections;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import calypte.collections.treehugemap.TreeMapKey;
 import calypte.collections.treehugemap.TreeNode;
 import calypte.collections.treehugemap.TreeNodes;
@@ -164,7 +161,7 @@ public class BasicMapReferenceCollection<K,T>
         if(root == null)
         	return; 
 
-    	find(f, new ArrayList<Object>(), root);
+    	find(f, root);
     	
     }
     
@@ -290,34 +287,24 @@ public class BasicMapReferenceCollection<K,T>
         
     }
     
-    private void find(Find<T> f, List<Object> list, TreeNode<T> node) {
+    private void find(Find<T> f, TreeNode<T> node) {
 
     	T e = treeNodes.getValue(nodes, values, node);
     	
-    	if(e != null) {
-    		f.found(list, e);
+    	if(e != null && f.accept()) {
+    		f.found(e);
     	}
     	
-    	Object[] nextKeys = node.getNextNodes();
-    	
-    	for(Object k: nextKeys) {
-    		TreeNode<T> n = node.getNext(nodes, k);
-    		
-    		list.add(k);
-    		
-    		if(n != null) {
-    			find(f, list, n);
-    		}
-    		
-    		list.remove(list.size() - 1);
-    	}
-    	
-    	
-    }
-    
-    public static interface Find<T> {
-    	
-    	void found(List<Object> route, T value);
+		Object[] nexKeys = node.getNextNodes();
+		
+		for(Object k: nexKeys) {
+			TreeNode<T> n = node.getNext(nodes, k);
+			if(n != null && f.acceptNodeKey(k)) {
+				f.beforeNextNode(k, n);
+				find(f, n);
+				f.afterNextNode(k, n);
+			}
+		}
     	
     }
     

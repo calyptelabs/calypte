@@ -41,6 +41,14 @@ import java.io.InputStream;
  */
 public interface Cache {
 
+	/*
+	 * Busca por uma chave ou agrupamento de chaves. Se key for null, todas as chaves do 
+	 * cache serão retornadas.
+	 * @param key Chave a ser buscada.
+	 * @param result Objeto que receberá as chaves encontradas.
+	 */
+	//void find(String key, FindResult result);
+	
 	/**
 	 * Obtém a configuração do cache.
 	 * @return Configuração.
@@ -257,5 +265,12 @@ public interface Cache {
 	 * for <code>false</code>.
 	 */
 	void destroy();
-	
+
+	/*
+	public interface FindResult{
+		
+		void found(String key, Cache cache);
+		
+	}
+	*/
 }
