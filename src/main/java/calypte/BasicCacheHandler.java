@@ -51,6 +51,7 @@ import calypte.collections.FlushableReferenceCollectionImp;
 import calypte.collections.MapReferenceCollection;
 import calypte.collections.Swapper;
 import calypte.collections.treehugemap.CharNode;
+import calypte.collections.treehugemap.CharNodeUtil;
 import calypte.collections.treehugemap.StringTreeNodes;
 import calypte.collections.treehugemap.TreeNode;
 import calypte.memory.Memory;
@@ -67,7 +68,7 @@ public class BasicCacheHandler implements CacheHandler{
 
     private static final int ENTRY_BINARY_SIZE                 = 48;
     
-    private static final int NODE_BINARY_SIZE                  = CharNode.DATA_SIZE + ENTRY_BINARY_SIZE;
+    private static final int NODE_BINARY_SIZE                  = CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
 
     private static final int INDEX_BINARY_SIZE                 = 58 + ENTRY_BINARY_SIZE;
     

@@ -24,6 +24,7 @@ import org.brandao.entityfilemanager.DataWritter;
 import org.brandao.entityfilemanager.EntityFileDataHandler;
 
 import calypte.collections.treehugemap.CharNode;
+import calypte.collections.treehugemap.CharNodeUtil;
 
 /**
  * 
@@ -41,7 +42,7 @@ public class CharNodeEntityFileDataHandler
 	private byte[] empty;
 	
 	public CharNodeEntityFileDataHandler(){
-		this.recordSize = CharNode.DATA_SIZE + 1;
+		this.recordSize = CharNodeUtil.DATA_SIZE + 1;
 		this.buffer = new byte[this.recordSize - 1];
 		this.empty  = new byte[this.recordSize - 1];
 	}
@@ -70,7 +71,7 @@ public class CharNodeEntityFileDataHandler
 			stream.writeLong(entity.getId());
 			stream.writeLong(entity.getValueId());
 			
-			for(long n: entity.getNextNodes()){
+			for(long n: entity.getNextIndexNodes()){
 				stream.writeLong(n);
 			}
 		}
@@ -87,7 +88,7 @@ public class CharNodeEntityFileDataHandler
 			return null;
 		}
 		else{
-			long[] nextNodes = new long[CharNode.LEN_NODES];
+			long[] nextNodes = new long[CharNodeUtil.LEN_NODES];
 			
 			long id = stream.readLong();
 			long valueId = stream.readLong();

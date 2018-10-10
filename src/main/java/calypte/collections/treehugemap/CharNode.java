@@ -29,33 +29,9 @@ public class CharNode<T> implements TreeNode<T>{
 
 	private static final long serialVersionUID 	= 480902938041176366L;
 
-	public static int MIN_CHARGROUP    			= 0x5b;
-
-    public static int MAX_CHARGROUP    			= 0x7d;
-
-    public static int LEN_CHARGROUP    			= MAX_CHARGROUP - MIN_CHARGROUP;
-
-    public static int MIN_NUMBERGROUP  			= 0x21;
-
-    public static int MAX_NUMBERGROUP  			= 0x3f;
-
-    public static int LEN_NUMBERGROUP  			= MAX_NUMBERGROUP - MIN_NUMBERGROUP;
-
-	public static int MIN_CHAR2GROUP    		= 0xe0;
-
-	public static int MAX_CHAR2GROUP    		= 0xff;
-	
-	public static int LEN_CHAR2GROUP    		= MAX_CHAR2GROUP - MIN_CHAR2GROUP;
-    
-	public static int LEN_NODES        			= LEN_NUMBERGROUP + LEN_CHARGROUP + LEN_CHAR2GROUP; 
-
-    public static int DATA_SIZE        			= LEN_NODES*8 + 16; 
-
-    public static final long MAX_NODES 			= Long.MAX_VALUE / DATA_SIZE;
-
     private long id;
 
-    private volatile long valueId;
+    private long valueId;
 
     private long[] nextNodes;
 
@@ -66,7 +42,7 @@ public class CharNode<T> implements TreeNode<T>{
     }
     
     public CharNode(){
-        this.nextNodes  = new long[LEN_NODES];
+        this.nextNodes  = new long[CharNodeUtil.LEN_NODES];
         this.id         = -1;
         this.valueId    = -1;
 
@@ -75,47 +51,39 @@ public class CharNode<T> implements TreeNode<T>{
         }
     }
 
+    public long[] getNextIndexNodes() {
+    	return nextNodes;
+    }
+    
+    public Object[] getNextNodes() {
+    	
+    	Object[] o = new Object[CharNodeUtil.LEN_NODES];
+    	
+    	for(int i=0;i<CharNodeUtil.LEN_NODES;i++) {
+    		o[i] = CharNodeUtil.toMap(i);
+    	}
+    	
+    	return o;
+    }
+    
     public void setNext(ReferenceCollection<TreeNode<T>> nodes, Object key, TreeNode<T> node){
-    	char c = (Character)key;
-        int index = c/* & 0xff*/;
-
-		if(index < MIN_CHARGROUP && index < MIN_NUMBERGROUP && index < MIN_CHAR2GROUP)
-			throw new IllegalArgumentException("invalid char: " + id);
-		
-		if(index > MAX_CHARGROUP && index > MAX_NUMBERGROUP &&  index > MAX_CHAR2GROUP)
-			throw new IllegalArgumentException("invalid char: " + id);
-
-		if(index <= MAX_NUMBERGROUP)
-			index = index - MIN_NUMBERGROUP;
-		else
-		if(index <= MAX_CHARGROUP)
-			index = LEN_NUMBERGROUP + (index - MIN_CHARGROUP);
-		else
-			index = LEN_NUMBERGROUP + LEN_CHARGROUP + (index - MIN_CHAR2GROUP);
-		
-        this.nextNodes[index] = node.getId();
-        nodes.set(this.id, this);
+    	int index = CharNodeUtil.toIndex((Character)key);
+    	
+    	if(index == -1)
+    		throw new IllegalArgumentException("invalid char: " + id);
+    	
+        nextNodes[index] = node.getId();
+        nodes.set(id, this);
     }
 
     public TreeNode<T> getNext(ReferenceCollection<TreeNode<T>> nodes, Object key) {
-    	char c = (Character)key;
-        int index = c/* & 0xff*/;
+    	int index = CharNodeUtil.toIndex((Character)key);
 
-		if(index < MIN_CHARGROUP && index < MIN_NUMBERGROUP && index < MIN_CHAR2GROUP)
-			throw new IllegalArgumentException("invalid char: " + id);
+    	if(index == -1)
+    		throw new IllegalArgumentException("invalid char: " + id);
+    	
 		
-		if(index > MAX_CHARGROUP && index > MAX_NUMBERGROUP &&  index > MAX_CHAR2GROUP)
-			throw new IllegalArgumentException("invalid char: " + id);
-
-		if(index <= MAX_NUMBERGROUP)
-			index = index - MIN_NUMBERGROUP;
-		else
-		if(index <= MAX_CHARGROUP)
-			index = LEN_NUMBERGROUP + (index - MIN_CHARGROUP);
-		else
-			index = LEN_NUMBERGROUP + LEN_CHARGROUP + (index - MIN_CHAR2GROUP);
-		
-		long nexNode = this.nextNodes[index];
+		long nexNode = nextNodes[index];
 
         if(nexNode != -1){
             return nodes.get(nexNode);
@@ -135,10 +103,6 @@ public class CharNode<T> implements TreeNode<T>{
     public long getValueId() {
         return valueId;
     }
-
-    public long[] getNextNodes() {
-		return nextNodes;
-	}
 
 	public T setValue(ReferenceCollection<T> values, T value) {
         if(this.valueId == -1){
@@ -213,4 +177,5 @@ public class CharNode<T> implements TreeNode<T>{
         }
 	}
 
+	
 }

@@ -49,4 +49,6 @@ public interface TreeNode<T> extends Serializable{
     
     T getValue(ReferenceCollection<T> values);
     
+    Object[] getNextNodes();
+    
 }
