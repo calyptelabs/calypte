@@ -71,79 +71,34 @@ public class FlushableReferenceCollectionImp<T>
 		int threadReference  = (int)(Thread.currentThread().getId() % lists.length);
 		long index           = lists[threadReference].insert(e);
 		return ((index & 0xffffffffL) << 8) | (threadReference & 0xff);
-		/*
-		int threadReference  = (int)(Thread.currentThread().getId() % lists.length);
-		long index           = lists[threadReference].insert(e);
-		
-		threadReference = threadReference & 0xff;
-		index           = index & 0xffffffffL;
-		
-		long address = (index << 8) | threadReference;
-		return address;
-		*/
 	}
 
 	public T set(long reference, T e) {
 		return lists[(int)(reference & 0xff)].set(reference >> 8, e);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].set(index, e);
-		*/
 	}
 
 	public T get(long reference) {
 		return lists[(int)(reference & 0xff)].get(reference >> 8);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].get(index);
-		*/
 	}
 
 	public boolean remove(long reference) {
 		return lists[(int)(reference & 0xff)].remove(reference >> 8);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].remove(index);
-		*/
 	}
 	
 	public boolean replace(long reference, T oldValue, T value) {
 		return lists[(int)(reference & 0xff)].replace(reference >> 8, oldValue, value);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].replace(index, oldValue, value);
-		*/
 	}
 
 	public T replace(long reference, T value) {
 		return lists[(int)(reference & 0xff)].replace(reference >> 8, value);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].replace(index, value);
-		*/
 	}
 
 	public T putIfAbsent(long reference, T value) {
 		return lists[(int)(reference & 0xff)].putIfAbsent(reference >> 8, value);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].putIfAbsent(index, value);
-		*/
 	}
 
 	public boolean remove(long reference, T oldValue) {
 		return lists[(int)(reference & 0xff)].remove(reference >> 8, oldValue);
-		/*
-		long threadReference = reference & 0xff;
-		long index           = reference >> 8;
-		return this.lists[(int)threadReference].remove(index, oldValue);
-		*/
 	}
 	
     public void setDeleteOnExit(boolean value){
