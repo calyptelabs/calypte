@@ -18,9 +18,9 @@
 package calypte;
 
 import java.io.InputStream;
-import java.io.Serializable;
+import java.util.concurrent.locks.Lock;
 
-import org.brandao.concurrent.NamedLock;
+import calypte.lock.CacheLockImp;
 
 /**
  * Provê as operações de um cache com bloqueio dos métodos que alteram o cache.
@@ -43,7 +43,7 @@ public class ConcurrentCache extends BasicCache {
 	
 	private static final long serialVersionUID = -8558471389768293591L;
 
-	protected transient NamedLock locks;
+	protected transient CacheLock<String> locks;
 	
     /**
      * Cria um novo cache a partir de uma configuração específica.
@@ -51,7 +51,7 @@ public class ConcurrentCache extends BasicCache {
      */
     public ConcurrentCache(CalypteConfig config){
     	super(config);
-    	this.locks = new NamedLock();
+    	this.locks = new CacheLockImp<String>();
     }
     
     /**
@@ -61,7 +61,7 @@ public class ConcurrentCache extends BasicCache {
      */
     public ConcurrentCache(CacheHandler cacheHandler){
     	super(cacheHandler);
-    	this.locks = new NamedLock();
+    	this.locks = new CacheLockImp<String>();
     }
     
 	/* métodos de armazenamento */
@@ -69,33 +69,32 @@ public class ConcurrentCache extends BasicCache {
 	public boolean replace(String key, Object value, 
 			long timeToLive, long timeToIdle) throws StorageException {
 		
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.replace(key, value, timeToLive, timeToIdle);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
 	}
 	
     public boolean replaceStream(String key, InputStream inputData, long timeToLive, long timeToIdle) throws StorageException{
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.replaceStream(key, inputData, timeToLive, timeToIdle);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
     }
 	
 	public boolean replace(String key, Object oldValue, 
 			Object newValue, long timeToLive, long timeToIdle) throws StorageException {
 		
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			Object o = super.get(key);
 			if(o != null && o.equals(oldValue)){
@@ -112,29 +111,27 @@ public class ConcurrentCache extends BasicCache {
 			throw new StorageException(e, e.getError(), e.getParams());
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
 	}
 	
 	public Object putIfAbsent(String key,
 			Object value, long timeToLive, long timeToIdle) throws StorageException {
 		
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.putIfAbsent(key, value, timeToLive, timeToIdle);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
 	}
 	
     public InputStream putIfAbsentStream(String key, InputStream inputData, long timeToLive, long timeToIdle) throws StorageException{
     	
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.putIfAbsentStream(key, inputData, timeToLive, timeToIdle);
 		}
@@ -145,53 +142,64 @@ public class ConcurrentCache extends BasicCache {
 			throw new StorageException(e, e.getError(), e.getParams());
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
     }
 	
 	public boolean put(String key, Object value, long timeToLive, long timeToIdle) throws StorageException {
 		
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.put(key, value, timeToLive, timeToIdle);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
 	}
 	
     public boolean putStream(String key, InputStream inputData, 
     		long timeToLive, long timeToIdle) throws StorageException{
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.putStream(key, inputData, timeToLive, timeToIdle);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
     }
 	
     /* métodos de coleta */
 	
 	public Object get(String key) throws RecoverException {
-		return super.get(key);
+		Lock lock = this.locks.getLock(key).readLock();
+		lock.lock();
+		try {
+			return super.get(key);
+		}
+		finally {
+			lock.unlock();
+		}
 	}
 
     public InputStream getStream(String key) throws RecoverException {
-		return super.getStream(key);
+		Lock lock = this.locks.getLock(key).readLock();
+		lock.lock();
+		try {
+			return super.getStream(key);
+		}
+		finally {
+			lock.unlock();
+		}
     }
 	
     /* métodos de remoção */
 
 	public boolean remove(String key, Object value) throws StorageException {
 		
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			Object o = super.get(key);
 			if(o != null && o.equals(value)){
@@ -210,21 +218,18 @@ public class ConcurrentCache extends BasicCache {
 			throw new StorageException(e, CacheErrors.ERROR_1021);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
 	}
 	
     public boolean remove(String key) throws StorageException{
-		Serializable refLock = this.locks.lock(key);
+		Lock lock = this.locks.getLock(key).writeLock();
+		lock.lock();
 		try{
 			return super.remove(key);
 		}
 		finally{
-			if(refLock != null){
-				this.locks.unlock(refLock, key);
-			}
+			lock.unlock();
 		}
     }
 	
