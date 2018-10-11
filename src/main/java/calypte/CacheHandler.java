@@ -20,6 +20,8 @@ package calypte;
 import java.io.InputStream;
 import java.io.Serializable;
 
+import calypte.collections.MapReferenceCollection.Find;
+
 /**
  * 
  * @author Ribeiro
@@ -27,7 +29,7 @@ import java.io.Serializable;
  */
 public interface CacheHandler extends Serializable{
     
-	void find(String key, ResultFind result);
+	void find(Find<DataMap> result);
 	
     boolean putStream(String key, InputStream inputData, 
     		long timeToLive, long timeToIdle) throws StorageException;
@@ -94,9 +96,4 @@ public interface CacheHandler extends Serializable{
 	
 	void destroy();
 	
-	public interface ResultFind{
-		
-		void found(String key, CacheHandler cache);
-		
-	}
 }

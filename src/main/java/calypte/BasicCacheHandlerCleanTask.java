@@ -19,8 +19,6 @@ package calypte;
 
 import java.util.concurrent.TimeUnit;
 
-import calypte.CacheHandler.ResultFind;
-
 /**
  * 
  * @author Ribeiro
@@ -52,11 +50,19 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 	}
 
 	private void clean() {
-		handler.find(null, new ResultFind() {
-			
-			public void found(String key, CacheHandler cache) {
-				cache.removeIfInvalid(key);
-			}
-		});
+		handler.find(new Find(null));
+	}
+	
+	private class Find extends AbstractFindCacheHandler{
+
+		public Find(String key) {
+			super(key);
+		}
+
+		@Override
+		protected void found(String request, String key, DataMap value) {
+			handler.removeIfInvalid(key);
+		}
+		
 	}
 }

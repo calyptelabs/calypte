@@ -34,6 +34,7 @@ import calypte.CacheHandler;
 import calypte.DataMap;
 import calypte.RecoverException;
 import calypte.StorageException;
+import calypte.collections.MapReferenceCollection.Find;
 
 /**
  * 
@@ -71,8 +72,8 @@ public class TransactionInfo implements TransactionCacheHandler {
 		this.timeout           = timeout;
 	}
 	
-	public void find(String key, ResultFind result) {
-		cache.find(key, result);
+	public void find(Find<DataMap> result) {
+		cache.find(result);
 	}
 	
 	/* métodos de armazenamento */

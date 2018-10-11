@@ -309,8 +309,8 @@ public class BasicCacheHandler implements CacheHandler{
     	
     }
     
-    public void find(String key, ResultFind result) {
-    	dataMap.find(new DataMapResultFind(key, result));
+    public void find(Find<DataMap> result) {
+    	dataMap.find(result);
     }
     
     public boolean putStream(String key, InputStream inputData, 
@@ -854,52 +854,5 @@ public class BasicCacheHandler implements CacheHandler{
     	}
     }
 	
-    public class DataMapResultFind 
-    	implements ResultFind, Find<DataMap>{
-
-    	private ResultFind original;
-    	
-    	public DataMapResultFind(String key, ResultFind original) {
-    		this.original   = original;
-    		this.chars      = key == null? null : key.toCharArray();
-    		this.index      = 0;
-    		this.currentKey = new StringBuilder();
-    	}
-    	
-		public void found(String key, CacheHandler cache) {
-			original.found(key, cache);
-		}
-
-		/* map */
-		
-		private char[] chars;
-		
-		private int index;
-		
-		private StringBuilder currentKey;
-		
-		public void found(DataMap value) {
-			found(currentKey.toString(), BasicCacheHandler.this);
-		}
-
-		public boolean accept() {
-			return chars == null? true : index == chars.length;
-		}
-
-		public boolean acceptNodeKey(Object key) {
-			return chars == null? true : key.equals(chars[index]);
-		}
-		
-		public void beforeNextNode(Object key, TreeNode<DataMap> node) {
-			currentKey.append(key);
-			index++;
-		}
-
-		public void afterNextNode(Object key, TreeNode<DataMap> node) {
-			currentKey.setLength(currentKey.length() - 1);
-			index--;
-		}
-    	
-    }
 
 }

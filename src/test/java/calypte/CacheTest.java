@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
-import calypte.CacheHandler.ResultFind;
 import junit.framework.TestCase;
 
 /**
@@ -274,9 +273,10 @@ public class CacheTest extends TestCase{
 
         final Set<String> result = new HashSet<String>();
         
-        ((ConcurrentCache)cache).cacheHandler.find(null, new ResultFind() {
+        ((ConcurrentCache)cache).cacheHandler.find(new AbstractFindCacheHandler(null) {
 			
-			public void found(String key, CacheHandler cache) {
+			@Override
+			protected void found(String request, String key, DataMap value) {
 				result.add(key);
 			}
 			

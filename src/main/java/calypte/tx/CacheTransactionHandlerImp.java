@@ -27,6 +27,7 @@ import calypte.CalypteConfig;
 import calypte.DataMap;
 import calypte.RecoverException;
 import calypte.StorageException;
+import calypte.collections.MapReferenceCollection.Find;
 
 /**
  * 
@@ -190,8 +191,8 @@ public class CacheTransactionHandlerImp implements CacheTransactionHandler{
 		
 	}
 
-	public void find(String key, ResultFind result) {
-		transactionInfo.find(key, result);
+	public void find(Find<DataMap> result) {
+		transactionInfo.find(result);
 	}
 	
 	public InputStream getStream(String key, boolean forUpdate)
