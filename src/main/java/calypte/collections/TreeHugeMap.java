@@ -82,18 +82,14 @@ public class TreeHugeMap<K extends TreeKey,T>
         this.values = 
             new HugeArrayList<T>(
                 maxCapacityElements, 
-                clearFactorElements, 
                 fragmentFactorElements,
-                swapElements,
-                quantitySwaperThreadElements);
+                swapElements);
         
         this.nodes = 
             new HugeArrayList<Map<Object,TreeHugeMapNode<T>>>(
                 maxCapacityNodes, 
-                clearFactorNodes, 
                 fragmentFactorNodes,
-                swapNodes,
-                quantitySwaperThreadNodes);
+                swapNodes);
 
     }
     

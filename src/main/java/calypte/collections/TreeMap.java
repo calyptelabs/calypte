@@ -53,58 +53,42 @@ public class TreeMap<K,T>
     
     private TreeNodes<T> treeNodes;
     
-    /**
-     * Cria uma nova instância usando os valores padrão.
-     * 
-     */
     public TreeMap(){
         this(
             DEFAULT_MAX_CAPACITY_NODE, 
-            DEFAULT_CLEAR_FACTOR_NODE, 
             DEFAULT_FRAGMENT_FACTOR_NODE,
             null,
             1,
-            1,
             DEFAULT_MAX_CAPACITY_ELEMENT, 
-            DEFAULT_CLEAR_FACTOR_ELEMENT, 
             DEFAULT_FRAGMENT_FACTOR_ELEMENT,
             null,
-            1,
             1,
             null);
     }
 
     public TreeMap(
             int maxCapacityNodes,
-            double clearFactorNodes, 
             double fragmentFactorNodes,
-            Swapper[] swapNodes,
-            int quantitySwaperThreadNodes,   
+            Swapper<TreeNode<T>>[] swapNodes,
             int subListsNodes,
             int maxCapacityElements,
-            double clearFactorElements, 
             double fragmentFactorElements,
-            Swapper[] swapElements,
-            int quantitySwaperThreadElements,
+            Swapper<T>[] swapElements,
             int subListsElements,
             TreeNodes<T> treeNodes){
         
         this.values = 
             new FlushableReferenceCollectionImp<T>(
                 maxCapacityElements, 
-                clearFactorElements, 
                 fragmentFactorElements,
                 swapElements,
-                quantitySwaperThreadElements,
                 subListsElements);
         
         this.nodes = 
             new FlushableReferenceCollectionImp<TreeNode<T>>(
                 maxCapacityNodes, 
-                clearFactorNodes, 
                 fragmentFactorNodes,
                 swapNodes,
-                quantitySwaperThreadNodes,
                 subListsNodes);
 
         this.treeNodes = treeNodes;

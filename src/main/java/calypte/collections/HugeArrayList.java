@@ -31,8 +31,6 @@ public class HugeArrayList<T>
 
 	public static final int DEFAULT_MAX_CAPACITY_ELEMENT = 1000;
     
-    public static final float DEFAULT_CLEAR_FACTOR_ELEMENT = 0.25F;
-    
     public static final float DEFAULT_FRAGMENT_FACTOR_ELEMENT = 0.03F;
 
     private volatile int size;
@@ -44,19 +42,15 @@ public class HugeArrayList<T>
     public HugeArrayList() {
         this(
             DEFAULT_MAX_CAPACITY_ELEMENT, 
-            DEFAULT_CLEAR_FACTOR_ELEMENT, 
             DEFAULT_FRAGMENT_FACTOR_ELEMENT,
-            null,
-            1);
+            null);
     }
 
     @SuppressWarnings("unchecked")
 	public HugeArrayList(
             int maxCapacityElements,
-            double clearFactorElements, 
             double fragmentFactorElements,
-            Swapper<T> swap,
-            int quantityClearThread) {
+            Swapper<T> swap) {
         
     	if(swap == null){
     		throw new NullPointerException("swap");
@@ -67,10 +61,8 @@ public class HugeArrayList<T>
         this.elements     = 
                 new FlushableReferenceCollectionImp<T>(
                 maxCapacityElements, 
-                clearFactorElements, 
                 fragmentFactorElements,
                 new Swapper[] {swap},
-                quantityClearThread,
                 1);
     }
     

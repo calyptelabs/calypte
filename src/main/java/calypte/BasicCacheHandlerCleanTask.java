@@ -59,6 +59,16 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 			super(key);
 		}
 
+		public boolean acceptNodeKey(Object key) {
+			try {
+				Thread.sleep(100);
+			}
+			catch(Throwable e) {
+				throw new IllegalStateException(e);
+			}
+			return super.acceptNodeKey(key);
+		}
+		
 		@Override
 		protected void found(String request, String key, DataMap value) {
 			handler.removeIfInvalid(key);

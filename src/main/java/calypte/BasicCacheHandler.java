@@ -111,7 +111,7 @@ public class BasicCacheHandler implements CacheHandler{
 
     private volatile long creationTime;
     
-    private BasicCacheHandlerCleanTask cleanTask;
+    private Thread cleanTask;
     
     public BasicCacheHandler(String name, CalypteConfig config) throws CacheException{
     	this.config                 = config;
@@ -132,10 +132,8 @@ public class BasicCacheHandler implements CacheHandler{
         this.countReadData          = new AtomicLong();
         this.countWriteData         = new AtomicLong();
         this.countRemovedData       = new AtomicLong();
-        this.cleanTask              = new BasicCacheHandlerCleanTask(this);
-        
-        Thread th = new Thread(null, this.cleanTask, "clean cache task");
-        th.start();
+        this.cleanTask              = new Thread(null, new BasicCacheHandlerCleanTask(this), "clean cache task");
+        this.cleanTask.start();
     }
     
     private EntityFileManagerConfigurer createEntityFileManager(CalypteConfig config){
@@ -215,10 +213,8 @@ public class BasicCacheHandler implements CacheHandler{
 	    	FlushableReferenceCollection<Block> dataList =
 	                new FlushableReferenceCollectionImp<Block>(
 	                dataInfo.getMaxCapacityElements(),
-	                dataInfo.getClearFactorElements(),
 	                dataInfo.getFragmentFactorElements(),
 	                swappers,
-	                config.getSwapperThread(),
 	                dataInfo.getSubLists()
 	                );
 	        dataList.setDeleteOnExit(false);
@@ -285,16 +281,12 @@ public class BasicCacheHandler implements CacheHandler{
     		MapReferenceCollection<String, DataMap> dataMap =
             		new BasicMapReferenceCollection<String, DataMap>(
                             nodeInfo.getMaxCapacityElements(),
-                            nodeInfo.getClearFactorElements(),
                             nodeInfo.getFragmentFactorElements(),
                             nodesSwappers,
-                            config.getSwapperThread(), 
                             nodeInfo.getSubLists(), 
                             indexInfo.getMaxCapacityElements(),
-                            indexInfo.getClearFactorElements(),
                             indexInfo.getFragmentFactorElements(),
                             indexSwappers,
-                            config.getSwapperThread(), 
                             indexInfo.getSubLists(), 
                             new StringTreeNodes<DataMap>()
     				);
@@ -833,6 +825,7 @@ public class BasicCacheHandler implements CacheHandler{
 	public void destroy(){
 		if(enabled){
 			enabled = false;
+			cleanTask.interrupt();
 			dataList.destroy();
 			dataMap.destroy();
 			entityFileManager.destroy();

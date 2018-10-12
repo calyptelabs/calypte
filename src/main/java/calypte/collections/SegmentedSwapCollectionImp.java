@@ -29,7 +29,7 @@ public class SegmentedSwapCollectionImp<T>
     
 	private static final long serialVersionUID = 7817500681111470845L;
 
-	private static final int MAX_ITENS_PER_SEGMENT = 5;
+	private static final int MIN_ITENS_PER_SEGMENT = 5;
 	
     protected SwapCollection<T>[] swapCollections;
 
@@ -41,7 +41,7 @@ public class SegmentedSwapCollectionImp<T>
     
     private int maxSegmentCapacity;
     
-    private double fragmentSize;
+    private int fragmentSize;
     
     private double clearFactor;
     
@@ -52,28 +52,43 @@ public class SegmentedSwapCollectionImp<T>
     private boolean live;
     
     @SuppressWarnings("unchecked")
-	public SegmentedSwapCollectionImp(int maxCapacity, double clearFactor,
-            double fragmentFactor, Swapper<T> swap, int quantitySwaperThread) {
+	public SegmentedSwapCollectionImp(int maxCapacity, double fragmentFactor, Swapper<T> swap) {
 
         this.fragmentSize        = (int)(maxCapacity * fragmentFactor);
         this.maxCapacity         = maxCapacity;
-        this.clearFactor         = clearFactor;
-        this.maxSegmentCapacity  = (int)(maxCapacity/fragmentSize);
+        this.maxSegmentCapacity  = (int)(maxCapacity/fragmentSize) + (maxCapacity % fragmentSize != 0? 1 : 0) ;
         this.readOnly            = false;
         this.forceSwap           = true;
         this.live                = true;
-        this.swapCollections     = new SwapCollectionImp[maxCapacity/MAX_ITENS_PER_SEGMENT + (maxCapacity % MAX_ITENS_PER_SEGMENT != 0? 1 : 0)];
+        
+
+        if(swap == null) {
+        	throw new NullPointerException("swap");
+        }
+        
+        if(this.fragmentSize < MIN_ITENS_PER_SEGMENT) {
+        	throw new IllegalStateException("fragmentSize");
+        }
+
+        if(this.maxCapacity <= 0 ) {
+        	throw new IllegalStateException("maxCapacity");
+        }
+        
+        this.swapCollections = new SwapCollectionImp[maxSegmentCapacity];
         
         int countMaxCapacity = maxCapacity;
+        
         for(int i=0;i<this.swapCollections.length;i++){
+        	int capacity = 
+        			(countMaxCapacity - fragmentSize) > 0? 
+        					fragmentSize : 
+        					countMaxCapacity;        			
         	this.swapCollections[i] = new SwapCollectionImp<T>(
         			swap, forceSwap, 
-        			(countMaxCapacity - MAX_ITENS_PER_SEGMENT) > MAX_ITENS_PER_SEGMENT? 
-        					MAX_ITENS_PER_SEGMENT : 
-        					countMaxCapacity,
+        			capacity,
 					readOnly);
         	
-        	countMaxCapacity = countMaxCapacity - MAX_ITENS_PER_SEGMENT;
+        	countMaxCapacity = countMaxCapacity - fragmentSize;
         }
         
     }
@@ -144,11 +159,11 @@ public class SegmentedSwapCollectionImp<T>
         this.maxSegmentCapacity = maxSegmentCapacity;
     }
 
-    public double getFragmentSize() {
+    public int getFragmentSize() {
         return fragmentSize;
     }
 
-    public void setFragmentSize(float fragmentSize) {
+    public void setFragmentSize(int fragmentSize) {
         this.fragmentSize = fragmentSize;
     }
 

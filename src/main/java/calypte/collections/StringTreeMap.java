@@ -18,6 +18,7 @@
 package calypte.collections;
 
 import calypte.collections.treehugemap.StringTreeNodes;
+import calypte.collections.treehugemap.TreeNode;
 
 /**
  *
@@ -30,19 +31,22 @@ public class StringTreeMap<T> extends TreeMap<String, T> {
 	public StringTreeMap(
             int maxCapacityNodes,
             double clearFactorNodes, 
-            double fragmentFactorNodes,
-            Swapper[] swap,
-            int quantitySwaperThreadNodes,
+            Swapper<TreeNode<T>>[] nodesSwap,
             int subListsNodes,
             int maxCapacityElements,
-            double clearFactorElements, 
             double fragmentFactorElements,
-            int quantitySwaperThreadElements,
+            Swapper<T>[] valuesSwap,
             int subListsElements){
-        super(maxCapacityNodes, clearFactorNodes, fragmentFactorNodes, 
-                swap, quantitySwaperThreadNodes, subListsNodes,
-                maxCapacityElements, clearFactorElements, fragmentFactorElements, 
-                swap, quantitySwaperThreadElements, subListsElements, 
-                new StringTreeNodes<T>());
+        super(
+        		maxCapacityNodes, 
+        		clearFactorNodes, 
+        		nodesSwap, 
+                subListsNodes,
+                maxCapacityElements, 
+                fragmentFactorElements, 
+                valuesSwap, 
+                subListsElements, 
+                new StringTreeNodes<T>()
+        );
     }    
 }

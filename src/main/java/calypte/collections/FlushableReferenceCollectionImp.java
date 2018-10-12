@@ -35,20 +35,16 @@ public class FlushableReferenceCollectionImp<T>
     public FlushableReferenceCollectionImp() {
         this(
             HugeArrayList.DEFAULT_MAX_CAPACITY_ELEMENT, 
-            HugeArrayList.DEFAULT_CLEAR_FACTOR_ELEMENT, 
             HugeArrayList.DEFAULT_FRAGMENT_FACTOR_ELEMENT,
             null,
-            1,
             1);
     }
 
     @SuppressWarnings("unchecked")
 	public FlushableReferenceCollectionImp(
             int maxCapacityElements,
-            double clearFactorElements, 
             double fragmentFactorElements,
             Swapper<T>[] swap,
-            int quantityClearThread, 
             int lists) {
     
     	this.lists        = new SimpleReferenceCollection[lists];
@@ -58,10 +54,8 @@ public class FlushableReferenceCollectionImp<T>
             this.lists[i] = 
                     new SimpleReferenceCollection<T>(
                         maxCapacityElements, 
-                        clearFactorElements, 
                         fragmentFactorElements,
-                        swap[i],
-                        quantityClearThread);
+                        swap[i]);
     		
     	}
     	

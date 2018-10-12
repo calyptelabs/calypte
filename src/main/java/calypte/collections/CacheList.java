@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 /**
- * Representa uma coleção de objetos de um determinado tipo. Os objetos dessa
- * coleção são armazenados em cache de forma segmentada.
  * 
  * @author Ribeiro
  */
@@ -39,26 +37,16 @@ public class CacheList<T>
 
     private final HugeArrayList<T> internalList;
     
-    /**
-     * Cria uma nova instância.
-     * 
-     * @param maxCapacityElementsOnMemory Número máximo de item que ficaram em memória.
-     * @param swapFactorElements Fator de transferência dos segmentos para o cache.
-     * @param fragmentFactorElements Fator de fragmentação da coleção dos itens.
-     */
     public CacheList(
             int maxCapacityElementsOnMemory,
-            double swapFactorElements, 
             double fragmentFactorElements,
             Swapper<T> swapper){
         
         this.internalList = 
             new HugeArrayList<T>(
                 maxCapacityElementsOnMemory, 
-                swapFactorElements, 
                 fragmentFactorElements, 
-                swapper, 
-                1);
+                swapper);
         
         //this.internalList.setForceSwap(true);
     }
@@ -155,27 +143,14 @@ public class CacheList<T>
         return this.internalList.subList(fromIndex, toIndex);
     }
 
-    /**
-     * Define se itens podem ser incluidos, atualizados ou removidos.
-     * @param value Verdadeiro para permitir somente a obtenção dos itens.
-     * Caso contrário, além de obter, será permitido incluir, atualizar e remover itens.
-     */
     public void setReadOnly(boolean value) {
         this.internalList.setReadOnly(value);
     }
 
-    /**
-     * Verifica se itens podem ser incluidos, atualizados ou removidos.
-     * @return Verdadeiro para permitir somente a obtenção dos itens.
-     * Caso contrário, além de obter, será permitido incluir, atualizar e remover itens.
-     */
     public boolean isReadOnly() {
         return this.internalList.isReadOnly();
     }
 
-    /**
-     * Envia todos os segmentos que estão em memória para o cache.
-     */
     public void flush(){
         this.internalList.flush();
     }

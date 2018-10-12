@@ -36,11 +36,11 @@ public class SimpleReferenceCollection<T>
 
 	private static final long serialVersionUID = 4658022218986426713L;
 
-	private static volatile long FreeManagerIDS = 0;
+	protected static volatile long FreeManagerIDS = 0;
 	
-	private static final int GROUP_SIZE = 131072; //1mb
+	public static final int GROUP_SIZE = 131072; //1mb
 	
-	private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
+	public static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 	
 	private FreeManager freeAddress;
 	
@@ -57,18 +57,14 @@ public class SimpleReferenceCollection<T>
     public SimpleReferenceCollection() {
         this(
             HugeArrayList.DEFAULT_MAX_CAPACITY_ELEMENT, 
-            HugeArrayList.DEFAULT_CLEAR_FACTOR_ELEMENT, 
             HugeArrayList.DEFAULT_FRAGMENT_FACTOR_ELEMENT,
-            null,
-            1);
+            null);
     }
 
 	public SimpleReferenceCollection(
             int maxCapacityElements,
-            double clearFactorElements, 
             double fragmentFactorElements,
-            Swapper<T> swap,
-            int quantityClearThread) {
+            Swapper<T> swap) {
 
     	if(swap == null){
     		throw new NullPointerException("swap");
@@ -81,10 +77,8 @@ public class SimpleReferenceCollection<T>
         this.collection   = 
                     new SegmentedSwapCollectionImp<T>(
                         maxCapacityElements, 
-                        clearFactorElements, 
                         fragmentFactorElements,
-                        swap,
-                        quantityClearThread);
+                        swap);
     }
     
 	public long insert(T e) {
