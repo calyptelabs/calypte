@@ -33,14 +33,11 @@ public class TestCalypteConfig
 
         this.nodesBufferSize = 1*1024*1024;
         this.nodesPageSize   = 1024;
-        this.nodesSwapFactor = 0.3;
         this.indexBufferSize = 32*1024*1024;
         this.indexPageSize   = 1024;
-        this.indexSwapFactor = 0.3;
         this.dataBufferSize  = 32*1024*1024;
         this.dataBlockSize   = 1024;
         this.dataPageSize    = 2*1024;
-        this.dataSwapFactor  = 0.3;
         this.maxSizeEntry    = 1024*1024;
         this.maxSizeKey      = 100;
         this.swapperThread   = 4;

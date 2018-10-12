@@ -24,15 +24,14 @@ package calypte;
  */
 class HugeListCalculator {
 
-	public static HugeListInfo calculate(
-			long dataBufferSize, long dataPageSize, 
-			long blockSize, double dataSwapFactor){
+	public static HugeListInfo calculate(long dataBufferSize, 
+			long dataPageSize, long blockSize){
 		
     	if(dataBufferSize <= 0)
     		throw new IllegalArgumentException("buffer size <= 0");
 
     	if(dataPageSize <= 0)
-    		throw new IllegalArgumentException("slab size <= 0");
+    		throw new IllegalArgumentException("page size <= 0");
 
     	if(blockSize <= 0)
     		throw new IllegalArgumentException("block size <= 0");
@@ -58,39 +57,27 @@ class HugeListCalculator {
     	double blocksPerPage  = dataPageSize/blockSize;
     	blocksPerPage         = dataPageSize%blockSize > 0? blocksPerPage + 1 : blocksPerPage;
     	
+    	if(blocksPerPage < 5)
+    		throw new IllegalArgumentException("block size < " + (blockSize*5) + " bytes");
+    	
     	//Fator de páginas. Usado para definir o fator de fragmentação da lista.
     	double pageFactor     = blocksPerPage/blocksLength;
     	//Quantidade de páginas na memória.
     	//double slabs          = blocksLength/blocksPerSlab;
-    	
-    	//Tamanho do buffer usado para fazer a permuta.
-    	double swapBufferSize = dataBufferSize*dataSwapFactor;
-    	//Quantidade de blocos que sofrerão permuta.
-    	double swapBlocks     = swapBufferSize/blockSize;
-    	swapBlocks            = swapBufferSize%blockSize > 0? swapBlocks + 1 : swapBlocks;
-    	//Fator de permuta. Usado para definir o fator de permuta da lista.
-        double swapFactor     = swapBlocks/blocksLength;
         
-    	if(swapBlocks <= 0)
-    		throw new IllegalArgumentException("swap factor is invalid: " + swapBlocks);
-
-        return new HugeListInfo((int)blocksLength, swapFactor, pageFactor, (int)subLists);    			
+        return new HugeListInfo((int)blocksLength, pageFactor, (int)subLists);    			
 	}
 	
 	public static class HugeListInfo{
 		
 		private int maxCapacityElements;
 		
-		private double clearFactorElements;
-        
 		private double fragmentFactorElements;
 
 		private int subLists;
 		
-		public HugeListInfo(int maxCapacityElements,
-				double clearFactorElements, double fragmentFactorElements, int subLists) {
+		public HugeListInfo(int maxCapacityElements, double fragmentFactorElements, int subLists) {
 			this.maxCapacityElements = maxCapacityElements;
-			this.clearFactorElements = clearFactorElements;
 			this.fragmentFactorElements = fragmentFactorElements;
 			this.subLists = subLists;
 		}
@@ -111,14 +98,6 @@ class HugeListCalculator {
 			this.maxCapacityElements = maxCapacityElements;
 		}
 
-		public double getClearFactorElements() {
-			return clearFactorElements;
-		}
-
-		public void setClearFactorElements(double clearFactorElements) {
-			this.clearFactorElements = clearFactorElements;
-		}
-
 		public double getFragmentFactorElements() {
 			return fragmentFactorElements;
 		}
@@ -130,7 +109,6 @@ class HugeListCalculator {
 		@Override
 		public String toString() {
 			return "HugeListInfo [maxCapacityElements=" + maxCapacityElements
-					+ ", clearFactorElements=" + clearFactorElements
 					+ ", fragmentFactorElements=" + fragmentFactorElements
 					+ ", subLists=" + subLists + "]";
 		}

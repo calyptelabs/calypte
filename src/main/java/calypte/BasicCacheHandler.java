@@ -193,8 +193,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getDataBufferSize(),
 	    						config.getDataPageSize(),
-	    						config.getDataBlockSize(),
-	    						config.getDataSwapFactor());
+	    						config.getDataBlockSize());
 	    	
 	    	Swapper<Block>[] swappers = new Swapper[dataInfo.getSubLists()];
 	    	
@@ -237,8 +236,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getNodesBufferSize(),
 	    						config.getNodesPageSize(),
-	    						NODE_BINARY_SIZE, 
-	    						config.getNodesSwapFactor());
+	    						NODE_BINARY_SIZE);
 
     		Swapper[] nodesSwappers = new Swapper[nodeInfo.getSubLists()];
 	    	
@@ -260,8 +258,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getIndexBufferSize(),
 	    						config.getIndexPageSize(),
-	    						INDEX_BINARY_SIZE, 
-	    						config.getIndexSwapFactor());
+	    						INDEX_BINARY_SIZE);
     		
 
     		Swapper<DataMap>[] indexSwappers = new Swapper[indexInfo.getSubLists()];

@@ -42,13 +42,9 @@ public class CalypteConfig implements Serializable{
     
 	protected long nodesPageSize;
     
-	protected double nodesSwapFactor;
-    
 	protected long indexBufferSize;
     
 	protected long indexPageSize;
-    
-	protected double indexSwapFactor;
     
 	protected long dataBufferSize;
     
@@ -56,8 +52,6 @@ public class CalypteConfig implements Serializable{
     
 	protected long dataPageSize;
     
-	protected double dataSwapFactor;
-	
 	protected long maxSizeEntry;
     
     protected int maxSizeKey;
@@ -121,22 +115,6 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Obtém o fator de swap dos nós.
-	 * @return fator.
-	 */
-	public double getNodesSwapFactor() {
-		return nodesSwapFactor;
-	}
-
-	/**
-	 * Define o fator de swap dos nós.
-	 * @param nodesSwapFactor fator.
-	 */
-	public void setNodesSwapFactor(double nodesSwapFactor) {
-		this.nodesSwapFactor = nodesSwapFactor;
-	}
-
-	/**
 	 * Obtém o tamanho do buffer usado para armazenar os índices dos itens na memória.
 	 * @return tamanho em bytes.
 	 */
@@ -166,22 +144,6 @@ public class CalypteConfig implements Serializable{
 	 */
 	public void setIndexPageSize(long indexPageSize) {
 		this.indexPageSize = indexPageSize;
-	}
-
-	/**
-	 * Obtém o fator de swap dos índices.
-	 * @return fator.
-	 */
-	public double getIndexSwapFactor() {
-		return indexSwapFactor;
-	}
-
-	/**
-	 * Define o fator de swap dos índices.
-	 * @param indexSwapFactor fator.
-	 */
-	public void setIndexSwapFactor(double indexSwapFactor) {
-		this.indexSwapFactor = indexSwapFactor;
 	}
 
 	/**
@@ -230,22 +192,6 @@ public class CalypteConfig implements Serializable{
 	 */
 	public void setDataPageSize(long dataPageSize) {
 		this.dataPageSize = dataPageSize;
-	}
-
-	/**
-	 * Obtém o fator de swap dos itens.
-	 * @return fator.
-	 */
-	public double getDataSwapFactor() {
-		return dataSwapFactor;
-	}
-
-	/**
-	 * Define o fator de swap dos itens.
-	 * @param dataSwapFactor fator.
-	 */
-	public void setDataSwapFactor(double dataSwapFactor) {
-		this.dataSwapFactor = dataSwapFactor;
 	}
 
 	/**
