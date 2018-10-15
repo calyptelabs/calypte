@@ -44,10 +44,10 @@ class HugeListCalculator {
     	
     	double subLists       = (dataBufferSize / (blockSize*2048L));
     	//subLists = 1;
-    	subLists              = subLists > 12? 12 : subLists;
+    	subLists              = subLists > 20? 20 : subLists;
     	subLists              = subLists == 0? 1 : subLists;
-    	
-    	dataBufferSize        = (long)(dataBufferSize / subLists);
+
+    	//dataBufferSize        = (long)(dataBufferSize / subLists);
     	
     	//Quantidade de blocos na memória.
     	double blocksLength   = dataBufferSize/blockSize;

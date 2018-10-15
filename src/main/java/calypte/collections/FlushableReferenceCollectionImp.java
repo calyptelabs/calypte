@@ -50,12 +50,23 @@ public class FlushableReferenceCollectionImp<T>
     	this.lists        = new SimpleReferenceCollection[lists];
         this.deleteOnExit = true;
     	
+        int fragmentSize = maxCapacityElements/lists;
+        int countMaxCapacity = maxCapacityElements;  
+        double itensFragment = (maxCapacityElements*fragmentFactorElements);
+
     	for(int i=0;i<this.lists.length;i++){
+        	int capacity = 
+        			(countMaxCapacity - fragmentSize) > 0? 
+        					fragmentSize : 
+        					countMaxCapacity;        			
+    		
             this.lists[i] = 
                     new SimpleReferenceCollection<T>(
-                        maxCapacityElements, 
-                        fragmentFactorElements,
+                		capacity, 
+                		itensFragment/capacity,
                         swap[i]);
+            
+        	countMaxCapacity = countMaxCapacity - fragmentSize;
     		
     	}
     	
