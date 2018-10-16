@@ -44,8 +44,6 @@ public class CacheInputStreamTest extends TestCase{
 	
 	private Random r      = new Random();
 	
-	private BasicCache c  = new BasicCache(new TestCalypteConfig());
-	
 	public void testOneSegment() throws IOException{
 		byte[] dta    = new byte[30];
 		byte[] result = new byte[30];
@@ -55,7 +53,7 @@ public class CacheInputStreamTest extends TestCase{
 		r.write(0, dta, 0, dta.length);
 		Block b = new Block(0, 0, r, dta.length);
 		
-		CacheInputStream in = new CacheInputStream(c.cacheHandler, null, new Block[]{b}, 1024);
+		CacheInputStream in = new CacheInputStream(null, null, new Block[]{b}, 1024);
 		in.read(result, 0, result.length);
 		assertTrue(Arrays.equals(dta, result));
 	}
@@ -81,7 +79,7 @@ public class CacheInputStreamTest extends TestCase{
 			maxLen -= len;
 		}
 		
-		CacheInputStream in = new CacheInputStream(c.cacheHandler, null, blocks.toArray(new Block[]{}), 1024);
+		CacheInputStream in = new CacheInputStream(null, null, blocks.toArray(new Block[]{}), 1024);
 		in.read(result, 0, result.length);
 		assertTrue(Arrays.equals(dta, result));
 	}
@@ -107,7 +105,7 @@ public class CacheInputStreamTest extends TestCase{
 			maxLen -= len;
 		}
 		
-		CacheInputStream in = new CacheInputStream(c.cacheHandler, null, blocks.toArray(new Block[]{}), 1024);
+		CacheInputStream in = new CacheInputStream(null, null, blocks.toArray(new Block[]{}), 1024);
 		in.read(result, 0, result.length);
 		assertTrue(Arrays.equals(dta, result));
 	}
@@ -132,7 +130,7 @@ public class CacheInputStreamTest extends TestCase{
 			maxLen -= len;
 		}
 		
-		CacheInputStream in = new CacheInputStream(c.cacheHandler, null, blocks.toArray(new Block[]{}), 1024);
+		CacheInputStream in = new CacheInputStream(null, null, blocks.toArray(new Block[]{}), 1024);
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		byte[] b = new byte[4];
 		int l;
@@ -140,6 +138,78 @@ public class CacheInputStreamTest extends TestCase{
 			out.write(b, 0, l);
 		}
 		assertTrue(Arrays.equals(dta, out.toByteArray()));
+	}
+
+	public void testMultWithLastBlockOneByte() throws IOException{
+		byte[] dta    = new byte[1025];
+		r.nextBytes(dta);
+
+		RegionMemory r = memory.alloc(1024);
+		r.write(0, dta, 0, 1024);
+		Block b1 = new Block(0, 0, r, 1024);
+
+		r = memory.alloc(1);
+		r.write(0, dta, 1024, 1);
+		Block b2 = new Block(0, 1, r, 1);
+		
+		CacheInputStream in = new CacheInputStream(null, null, new Block[] {b1,b2}, 1025);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] b = new byte[4];
+		int l;
+		while((l = in.read(b)) > 0){
+			out.write(b, 0, l);
+		}
+		
+		assertTrue(Arrays.equals(dta, out.toByteArray()));
+		
+	}
+
+	public void testMultWithLastBlocktwoBytes() throws IOException{
+		byte[] dta    = new byte[1026];
+		r.nextBytes(dta);
+
+		RegionMemory r = memory.alloc(1024);
+		r.write(0, dta, 0, 1024);
+		Block b1 = new Block(0, 0, r, 1024);
+
+		r = memory.alloc(2);
+		r.write(0, dta, 1024, 2);
+		Block b2 = new Block(0, 1, r, 2);
+		
+		CacheInputStream in = new CacheInputStream(null, null, new Block[] {b1,b2}, 1026);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] b = new byte[4];
+		int l;
+		while((l = in.read(b)) > 0){
+			out.write(b, 0, l);
+		}
+		
+		assertTrue(Arrays.equals(dta, out.toByteArray()));
+		
+	}
+
+	public void testMultWithoutLastByte() throws IOException{
+		byte[] dta    = new byte[2047];
+		r.nextBytes(dta);
+
+		RegionMemory r = memory.alloc(1024);
+		r.write(0, dta, 0, 1024);
+		Block b1 = new Block(0, 0, r, 1024);
+
+		r = memory.alloc(1023);
+		r.write(0, dta, 1024, 1023);
+		Block b2 = new Block(0, 1, r, 1023);
+		
+		CacheInputStream in = new CacheInputStream(null, null, new Block[] {b1,b2}, 2047);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		byte[] b = new byte[4];
+		int l;
+		while((l = in.read(b)) > 0){
+			out.write(b, 0, l);
+		}
+		
+		assertTrue(Arrays.equals(dta, out.toByteArray()));
+		
 	}
 	
 }

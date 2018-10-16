@@ -40,7 +40,6 @@ public class TestCalypteConfig
         this.dataPageSize    = 2*1024;
         this.maxSizeEntry    = 1024*1024;
         this.maxSizeKey      = 100;
-        this.swapperThread   = 4;
         this.dataPath        = "/mnt/calypte";
         this.memory          = new DirectMemory();
 	}
