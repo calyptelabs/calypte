@@ -57,7 +57,6 @@ public class PropertiesCalypteConfig extends CalypteConfig{
         this.dataPageSize    = config.getLong(CacheConstants.DATA_PAGE_SIZE,		"8k");
         this.maxSizeEntry    = config.getLong(CacheConstants.MAX_SIZE_ENTRY,		"1m");
         this.maxSizeKey      = config.getInt(CacheConstants.MAX_SIZE_KEY,			"100");
-        this.swapperThread   = config.getInt(CacheConstants.SWAPPER_THREAD,			"4");
         this.dataPath        = config.getString(CacheConstants.DATA_PATH,			"/mnt/calypte");
         this.memory          = createMemory(config.getString(CacheConstants.MEMORY_ACCESS_TYPE,"heap"), classLoader);
         

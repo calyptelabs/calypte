@@ -643,8 +643,8 @@ public class BasicCacheHandler implements CacheHandler{
 
         	//Verifica se o item já expirou
         	if(map.isDead()){
-        		//Se expirou, remove do cache e retorna null.
-        		remove(key, map);
+        		//Vai ser removido pelo processo de limpeza
+        		//remove(key, map);
         		return null;
         	}
         	
@@ -728,6 +728,13 @@ public class BasicCacheHandler implements CacheHandler{
                 lastSegment = segment;
             }
 
+            if(inputData.available() != 0) {
+                throw new StorageException(
+                		new IllegalStateException("available: " + inputData.available()), 
+                		CacheErrors.ERROR_1007
+                );
+            }
+            
             this.countWriteData.addAndGet(writeData);
             
     		if(writeData > this.maxBytesToStorageEntry){

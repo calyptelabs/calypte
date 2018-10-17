@@ -56,8 +56,6 @@ public class CalypteConfig implements Serializable{
     
     protected int maxSizeKey;
     
-    protected int swapperThread;
-    
     protected Memory memory;
     
     protected String dataPath;
@@ -65,8 +63,7 @@ public class CalypteConfig implements Serializable{
     protected EntityFileManager entityFileManager;
     
 	/**
-	 * Obtém a pasta onde o servidor irá fazer o swap dos dados quando 
-	 * o limite da memória for atingido.
+	 * Obtém o local onde os dados do cache serão aramazenados.
 	 * @return pasta.
 	 */
 	public String getDataPath() {
@@ -74,8 +71,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define a pasta onde o servidor irá fazer o swap dos dados quando 
-	 * o limite da memória for atingido.
+	 * Define o local onde os dados do cache serão aramazenados.
 	 * @param dataPath pasta.
 	 */
 	public void setDataPath(String dataPath) {
@@ -91,7 +87,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define otamanho do buffer usado para armazenar os nós na memória.
+	 * Define o tamanho do buffer usado para armazenar os nós na memória.
 	 * @param nodesBufferSize tamanho em bytes.
 	 */
 	public void setNodesBufferSize(long nodesBufferSize) {
@@ -99,7 +95,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Obtém o tamanho da página do buffer dos nós.
+	 * Obtém o tamanho da página do buffer de nós.
 	 * @return tamanho em bytes
 	 */
 	public long getNodesPageSize() {
@@ -107,7 +103,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define o tamanho da página do buffer dos nós.
+	 * Define o tamanho da página do buffer de nós.
 	 * @param nodesPageSize
 	 */
 	public void setNodesPageSize(long nodesPageSize) {
@@ -131,7 +127,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Obtém o tamanho da página do buffer dos íncices.
+	 * Obtém o tamanho da página do buffer de índices.
 	 * @return tamanho em bytes.
 	 */
 	public long getIndexPageSize() {
@@ -139,8 +135,8 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define o tamanho da página do buffer dos íncices.
-	 * @param indexPageSize em bytes.
+	 * Define o tamanho da página do buffer de índices.
+	 * @param indexPageSize tamanho em bytes.
 	 */
 	public void setIndexPageSize(long indexPageSize) {
 		this.indexPageSize = indexPageSize;
@@ -179,7 +175,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Obtém o tamanho da página do buffer dos itens.
+	 * Obtém o tamanho da página do buffer de itens.
 	 * @return tamanho em bytes.
 	 */
 	public long getDataPageSize() {
@@ -187,7 +183,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define o tamanho da página do buffer dos itens.
+	 * Define o tamanho da página do buffer de itens.
 	 * @param dataPageSize tamanho em bytes.
 	 */
 	public void setDataPageSize(long dataPageSize) {
@@ -219,29 +215,11 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define o tamanho máximo, em bytes, que uma chave pode ter.
+	 * Define o tamanho máximo que uma chave pode ter.
 	 * @param maxSizeKey tamanho em bytes.
 	 */
 	public void setMaxSizeKey(int maxSizeKey) {
 		this.maxSizeKey = maxSizeKey;
-	}
-
-	/**
-	 * Obtém a quantidade de threads que irão fazer a troca dos dados da 
-	 * memória para o disco, por exemplo.
-	 * @return quantidade.
-	 */
-	public int getSwapperThread() {
-		return swapperThread;
-	}
-
-	/**
-	 * Define a quantidade de threads que irão fazer a troca dos dados da 
-	 * memória para o disco, por exemplo.
-	 * @param swapperThread quantidade.
-	 */
-	public void setSwapperThread(int swapperThread) {
-		this.swapperThread = swapperThread;
 	}
 
 	/**
@@ -253,7 +231,7 @@ public class CalypteConfig implements Serializable{
 	}
 
 	/**
-	 * Define a estratégia de acesso a memória.
+	 * Define a estratégia de acesso à memória.
 	 * @param memory estratégia.
 	 */
 	public void setMemory(Memory memory) {
