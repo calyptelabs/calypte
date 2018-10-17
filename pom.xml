@@ -3,7 +3,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>calypte</groupId>
     <artifactId>calypte</artifactId>
-    <version>1.0.0.3</version>
+    <version>1.0.2.0</version>
     <packaging>jar</packaging>
 
     <name>calypte</name>
