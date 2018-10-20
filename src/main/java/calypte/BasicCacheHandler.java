@@ -508,8 +508,15 @@ public class BasicCacheHandler implements CacheHandler{
 
         try{
             //Faz a indexação do item e retorna o índice atual, caso exista.
-        	oldMap = dataMap.get(key);
             oldMap = dataMap.putIfAbsent(key, map);
+            
+            if(oldMap != null && oldMap.isDead(creationTime)) {
+            	if(dataMap.replace(key, oldMap, map)) {
+            		this.releaseSegments(oldMap);
+            		oldMap = null;
+            	}
+            }
+            
         }
         catch(Throwable e){
         	try{
