@@ -328,7 +328,7 @@ public class BasicCacheHandler implements CacheHandler{
             map.setTimeToLive(itemMetadata.getTimeToLive());
             
         	//o cache transacional pode tentar restaurar um item já expirado.
-            //Nesse caso, tem que remove-lo. 
+            //Nesse caso, tem que remover. 
             //Somente será removido se o item ainda for o mesmo gerenciado pela transação.
             if(map.isDead()){
             	this.remove(key, map);
@@ -389,7 +389,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
         
         this.countWrite.incrementAndGet();
-        return oldMap != null;
+        return oldMap != null && oldMap.getCreationTime() > creationTime;
     }
 
     public boolean replaceStream(String key, InputStream inputData, 
@@ -455,7 +455,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    	}
         }
         
-        if(oldMap != null){
+        if(oldMap != null && oldMap.getCreationTime() > creationTime){
             this.countWrite.incrementAndGet();
         	return true;
         }
@@ -580,7 +580,7 @@ public class BasicCacheHandler implements CacheHandler{
 
             if(data != null){
             	remove(key, data);
-            	return true;
+            	return data.getCreationTime() > creationTime;
             }
             else
                 return false;
