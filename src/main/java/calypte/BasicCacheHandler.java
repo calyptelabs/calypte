@@ -330,8 +330,8 @@ public class BasicCacheHandler implements CacheHandler{
         	//o cache transacional pode tentar restaurar um item já expirado.
             //Nesse caso, tem que remover. 
             //Somente será removido se o item ainda for o mesmo gerenciado pela transação.
-            if(map.isDead()){
-            	this.remove(key, map);
+            if(map.isDead(creationTime)){
+            	//this.remove(key, map);
             	return false;
             }
             
@@ -389,7 +389,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
         
         this.countWrite.incrementAndGet();
-        return oldMap != null && oldMap.getCreationTime() > creationTime;
+        return oldMap != null && !oldMap.isDead(creationTime);
     }
 
     public boolean replaceStream(String key, InputStream inputData, 
@@ -455,7 +455,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    	}
         }
         
-        if(oldMap != null && oldMap.getCreationTime() > creationTime){
+        if(oldMap != null && !oldMap.isDead(creationTime)){
             this.countWrite.incrementAndGet();
         	return true;
         }
@@ -508,6 +508,7 @@ public class BasicCacheHandler implements CacheHandler{
 
         try{
             //Faz a indexação do item e retorna o índice atual, caso exista.
+        	oldMap = dataMap.get(key);
             oldMap = dataMap.putIfAbsent(key, map);
         }
         catch(Throwable e){
@@ -554,14 +555,14 @@ public class BasicCacheHandler implements CacheHandler{
     
     public InputStream getStream(String key) throws RecoverException {
         DataMap map = dataMap.get(key);
-    	return map == null || map.getCreationTime() < creationTime? null : getStream(key, map);
+    	return map == null || map.isDead(creationTime)? null : getStream(key, map);
     }
     
 	public boolean removeIfInvalid(String key) throws StorageException {
         try{
         	DataMap data = this.dataMap.get(key);
 
-            if(data != null && (data.getCreationTime() < creationTime || data.isDead())){
+            if(data != null && data.isDead(creationTime)){
             	remove(key, data);
             	return true;
             }
@@ -580,7 +581,7 @@ public class BasicCacheHandler implements CacheHandler{
 
             if(data != null){
             	remove(key, data);
-            	return data.getCreationTime() > creationTime;
+            	return !data.isDead(creationTime);
             }
             else
                 return false;
@@ -642,7 +643,7 @@ public class BasicCacheHandler implements CacheHandler{
             countRead.incrementAndGet();
 
         	//Verifica se o item já expirou
-        	if(map.isDead()){
+        	if(map.isDead(creationTime)){
         		//Vai ser removido pelo processo de limpeza
         		//remove(key, map);
         		return null;

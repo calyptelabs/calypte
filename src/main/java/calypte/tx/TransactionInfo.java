@@ -145,7 +145,7 @@ public class TransactionInfo implements TransactionCacheHandler {
     	
     	try{
 			DataMap dta = getEntity(manager, cache, key, forUpdate);
-			return dta == null || dta.getCreationTime() < cache.getCreationTime() ? 
+			return dta == null? 
 					null : 
 					cache.getStream(key, dta);
     	}
