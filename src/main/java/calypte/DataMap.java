@@ -93,7 +93,7 @@ public class DataMap implements Serializable{
     
     public boolean isDead(long cacheCreationTime){
     	long currentTime = System.currentTimeMillis();
-    	return creationTime < cacheCreationTime || currentTime > this.getExpirationTime();
+    	return creationTime <= cacheCreationTime || currentTime > this.getExpirationTime();
     }
     
 	public long getId() {
