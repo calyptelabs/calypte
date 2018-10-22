@@ -67,11 +67,11 @@ public class BasicCacheHandler implements CacheHandler{
 
     private static final long serialVersionUID                 = 8023029671447700902L;
 
-    private static final int ENTRY_BINARY_SIZE                 = 48;
+    //private static final int ENTRY_BINARY_SIZE                 = 48;
     
-    private static final int NODE_BINARY_SIZE                  = CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
+    private static final int NODE_BINARY_SIZE                  = 822;//CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
 
-    private static final int INDEX_BINARY_SIZE                 = 58 + ENTRY_BINARY_SIZE;
+    private static final int INDEX_BINARY_SIZE                 = 78;//58 + ENTRY_BINARY_SIZE;
     
     private static final Class<?> ITEM_CACHE_INPUTSTREAM_CLASS = ItemCacheInputStream.class;
     
@@ -193,7 +193,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getDataBufferSize(),
 	    						config.getDataPageSize(),
-	    						config.getDataBlockSize());
+	    						config.getDataBlockSize() + 32);
 	    	
 	    	Swapper<Block>[] swappers = new Swapper[dataInfo.getSubLists()];
 	    	
