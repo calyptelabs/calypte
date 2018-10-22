@@ -35,7 +35,7 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 	public void run() {
 		while(!handler.isDestroyed()) {
 			try {
-				Thread.sleep(TimeUnit.SECONDS.toMillis(60));
+				Thread.sleep(TimeUnit.SECONDS.toMillis(10));
 				clean();
 			}
 			catch(Throwable e) {
@@ -71,6 +71,11 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 		
 		@Override
 		protected void found(String request, String key, DataMap value) {
+			
+			if(handler.isDestroyed()) {
+				throw new IllegalStateException();
+			}
+			
 			handler.removeIfInvalid(key);
 		}
 		
