@@ -83,7 +83,7 @@ public class TransactionInfo implements TransactionCacheHandler {
 		try{
 			DataMap dta = getEntity(manager, cache, key, true);
 			
-			if(dta != null){
+			if(dta != null && !dta.isDead(getCreationTime())){
 				putEntity(manager, cache, key, dta, inputData, timeToLive, timeToIdle);
 				return true;
 			}
@@ -104,7 +104,7 @@ public class TransactionInfo implements TransactionCacheHandler {
 		try{
 			DataMap dta = getEntity(manager, cache, key, true);
 			
-			if(dta == null){
+			if(dta == null || dta.isDead(getCreationTime())){
 				putEntity(manager, cache, key, dta, inputData, timeToLive, timeToIdle);
 				return null;
 			}
