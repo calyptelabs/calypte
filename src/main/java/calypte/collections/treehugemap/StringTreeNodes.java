@@ -30,9 +30,9 @@ public class StringTreeNodes<T> implements TreeNodes<T>{
 
 	private static final long serialVersionUID = -8387188156629418047L;
 
-	private RouletteLock locks;
+	protected RouletteLock locks;
 	
-	private long firstNodeId;
+	protected long firstNodeId;
 	
 	public StringTreeNodes(){
 		this.locks       = new RouletteLock();

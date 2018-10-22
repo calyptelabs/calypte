@@ -53,7 +53,7 @@ import calypte.collections.MapReferenceCollection.Find;
 import calypte.collections.Swapper;
 import calypte.collections.treehugemap.CharNode;
 import calypte.collections.treehugemap.CharNodeUtil;
-import calypte.collections.treehugemap.StringTreeNodes;
+import calypte.collections.treehugemap.DataMapStringTreeNodes;
 import calypte.collections.treehugemap.TreeNode;
 import calypte.memory.Memory;
 import calypte.memory.RegionMemory;
@@ -285,7 +285,7 @@ public class BasicCacheHandler implements CacheHandler{
                             indexInfo.getFragmentFactorElements(),
                             indexSwappers,
                             indexInfo.getSubLists(), 
-                            new StringTreeNodes<DataMap>()
+                            new DataMapStringTreeNodes(this)
     				);
             		
             		
@@ -435,8 +435,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
 
         try{
-            //Faz a indexação do item e retorna o índice atual, caso exista.
-            oldMap = this.dataMap.replace(key, map);
+            oldMap = dataMap.replace(key, map);
         }
         catch(Throwable e){
         	try{
@@ -451,11 +450,16 @@ public class BasicCacheHandler implements CacheHandler{
         }
         finally{
 	    	if(oldMap != null){
-	    		this.releaseSegments(oldMap);
+	    		//Se oldMap foi substituido, remover os segmentos associados ao oldMap
+	    		releaseSegments(oldMap);
+	    	}
+	    	else {
+	    		//Se oldMap não foi substituido, remover os segmentos associados ao map
+	    		releaseSegments(map);
 	    	}
         }
         
-        if(oldMap != null && !oldMap.isDead(creationTime)){
+        if(oldMap != null){
             this.countWrite.incrementAndGet();
         	return true;
         }
@@ -507,16 +511,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
 
         try{
-            //Faz a indexação do item e retorna o índice atual, caso exista.
             oldMap = dataMap.putIfAbsent(key, map);
-            
-            if(oldMap != null && oldMap.isDead(creationTime)) {
-            	if(dataMap.replace(key, oldMap, map)) {
-            		this.releaseSegments(oldMap);
-            		oldMap = null;
-            	}
-            }
-            
         }
         catch(Throwable e){
         	try{
@@ -532,32 +527,33 @@ public class BasicCacheHandler implements CacheHandler{
         
     	//se oldMap for diferente de null, significa que já existe um item no cache
         if(oldMap != null){
-        	//remove os segmentos alocados para o item atual.
-        	//se oldMap for diferente de null, map não foi registrado
-        	//somente precisa liberar os segmentos alocados
-    		this.releaseSegments(map);
-    		
-        	//tenta obter o stream do item no cache
-        	in = this.getStream(key, oldMap);
-        }
-        else{
-        	this.countWrite.incrementAndGet();
+        	
+        	if(!oldMap.isDead(creationTime)) {
+	        	//remove os segmentos alocados para o item atual.
+	        	//se oldMap for diferente de null, map não foi registrado
+	        	//somente precisa liberar os segmentos alocados
+	    		releaseSegments(map);
+	    		
+	        	//tenta obter o stream do item no cache
+	        	in = getStream(key, oldMap);
+	        	
+		    	if(in == null){
+		    		//será lançada uma exceção se o item não existir
+		    		throw new StorageException(CacheErrors.ERROR_1030);
+		    	}
+		    	else{
+		    		//retorna o stream
+		        	countWrite.incrementAndGet();
+		    		return in;
+		    	}
+        	}
+        	else {
+        		releaseSegments(oldMap);
+        	}
+        	
         }
         
-        if(oldMap != null){
-	    	if(in == null){
-	    		//será lançada uma exceção se o item não existir
-	    		throw new StorageException(CacheErrors.ERROR_1030);
-	    	}
-	    	else{
-	    		//retorna o stream
-	    		return in;
-	    	}
-        }
-        else{
-        	return null;
-        }
-        
+        return null;
     }
     
     public InputStream getStream(String key) throws RecoverException {
