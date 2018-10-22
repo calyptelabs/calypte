@@ -35,7 +35,7 @@ public class BasicCacheHandlerCleanTask implements Runnable{
 	public void run() {
 		while(!handler.isDestroyed()) {
 			try {
-				Thread.sleep(TimeUnit.SECONDS.toMillis(10));
+				Thread.sleep(TimeUnit.SECONDS.toMillis(30));
 				clean();
 			}
 			catch(Throwable e) {

@@ -30,7 +30,7 @@ public class RouletteLock {
 	private Lock[] locks;
 
 	public RouletteLock(){
-		this(10);
+		this(20);
 	}
 	
 	public RouletteLock(int size){

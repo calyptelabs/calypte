@@ -95,6 +95,13 @@ public class DataMap implements Serializable{
     	long currentTime = System.currentTimeMillis();
     	return creationTime <= cacheCreationTime || currentTime > this.getExpirationTime();
     }
+
+    public long getDeadTime(long cacheCreationTime){
+    	long currentTime = System.currentTimeMillis();
+    	return creationTime <= cacheCreationTime?
+    			cacheCreationTime - creationTime : 
+				currentTime - getExpirationTime();
+    }
     
 	public long getId() {
 		return id;
