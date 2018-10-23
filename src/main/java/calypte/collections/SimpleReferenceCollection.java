@@ -253,6 +253,9 @@ public class SimpleReferenceCollection<T>
 						//suppress exception
 					}
 				}
+				
+				stream = null;
+				objectStream = null;
 			}
 		}
 		
@@ -289,6 +292,8 @@ public class SimpleReferenceCollection<T>
 				}
 				
 				f.delete();
+				stream = null;
+				objectStream = null;
 			}
 		}
 		

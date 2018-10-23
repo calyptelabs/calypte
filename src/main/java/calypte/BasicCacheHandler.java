@@ -52,7 +52,6 @@ import calypte.collections.MapReferenceCollection;
 import calypte.collections.MapReferenceCollection.Find;
 import calypte.collections.Swapper;
 import calypte.collections.treehugemap.CharNode;
-import calypte.collections.treehugemap.CharNodeUtil;
 import calypte.collections.treehugemap.DataMapStringTreeNodes;
 import calypte.collections.treehugemap.TreeNode;
 import calypte.memory.Memory;
