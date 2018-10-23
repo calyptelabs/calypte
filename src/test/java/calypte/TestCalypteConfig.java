@@ -25,23 +25,21 @@ import calypte.memory.DirectMemory;
  *
  */
 public class TestCalypteConfig 
-	extends CalypteConfig{
+	extends PropertiesCalypteConfig{
 
 	private static final long serialVersionUID = -8953971203516129784L;
 
 	public TestCalypteConfig(){
 
-        this.nodesBufferSize = 1*1024*1024;
-        this.nodesPageSize   = 1024;
+        this.nodesBufferSize = 2*1024*1024;
         this.indexBufferSize = 32*1024*1024;
-        this.indexPageSize   = 1024;
         this.dataBufferSize  = 32*1024*1024;
-        this.dataBlockSize   = 1024;
-        this.dataPageSize    = 2*1024;
         this.maxSizeEntry    = 1024*1024;
         this.maxSizeKey      = 100;
         this.dataPath        = "/mnt/calypte";
         this.memory          = new DirectMemory();
+        
+        apply(new Configuration());
 	}
 	
 }
