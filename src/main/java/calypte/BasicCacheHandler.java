@@ -67,11 +67,29 @@ public class BasicCacheHandler implements CacheHandler{
 
     private static final long serialVersionUID                 = 8023029671447700902L;
 
-    //private static final int ENTRY_BINARY_SIZE                 = 48;
-    
-    private static final int NODE_BINARY_SIZE                  = 822;//CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
+    private static final int ENTRY_SIZE                        = 58;
 
-    private static final int INDEX_BINARY_SIZE                 = 78;//58 + ENTRY_BINARY_SIZE;
+    /* node size */
+    
+    private static final int CHAR_NODE_SIZE                    = 40;
+
+    private static final int LONG_ARRAY_CHAR_NODE_SIZE         = 784;
+
+    private static final int NODE_SIZE                         = ENTRY_SIZE + CHAR_NODE_SIZE + LONG_ARRAY_CHAR_NODE_SIZE;//CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
+
+    /* index size */
+
+    private static final int DATA_MAP_SIZE                     = 78;
+    
+    private static final int INDEX_SIZE                        = DATA_MAP_SIZE + ENTRY_SIZE;//58 + ENTRY_BINARY_SIZE;
+    
+    /* block data size base */
+    
+    private static final int BLOCK_SIZE                        = 48;
+
+    private static final int REGION_MEMORY_SIZE                = 32;
+    
+    private static final int BLOCK_DATA_SIZE                   = REGION_MEMORY_SIZE + BLOCK_SIZE;
     
     private static final Class<?> ITEM_CACHE_INPUTSTREAM_CLASS = ItemCacheInputStream.class;
     
@@ -193,7 +211,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getDataBufferSize(),
 	    						config.getDataPageSize(),
-	    						config.getDataBlockSize() + 32);
+	    						config.getDataBlockSize() + BLOCK_DATA_SIZE);
 	    	
 	    	Swapper<Block>[] swappers = new Swapper[dataInfo.getSubLists()];
 	    	
@@ -236,7 +254,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getNodesBufferSize(),
 	    						config.getNodesPageSize(),
-	    						NODE_BINARY_SIZE);
+	    						NODE_SIZE);
 
     		Swapper[] nodesSwappers = new Swapper[nodeInfo.getSubLists()];
 	    	
@@ -258,7 +276,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getIndexBufferSize(),
 	    						config.getIndexPageSize(),
-	    						INDEX_BINARY_SIZE);
+	    						INDEX_SIZE);
     		
 
     		Swapper<DataMap>[] indexSwappers = new Swapper[indexInfo.getSubLists()];

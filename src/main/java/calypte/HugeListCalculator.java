@@ -43,12 +43,12 @@ class HugeListCalculator {
     		throw new IllegalArgumentException("block size > page size");
 
     	if(dataBufferSize < 5*1024*1024) {
-    		throw new IllegalArgumentException("buffer size <= " + 10*1024*1024);
+    		throw new IllegalArgumentException("buffer size <= " + 5*1024*1024);
     	}
     	
-    	double subLists       = (dataBufferSize / (blockSize*1073741824L));
+    	double subLists       = (dataBufferSize / 268435456L);
     	//subLists = 1;
-    	subLists              = subLists > 12? 12 : subLists;
+    	subLists              = subLists > 30? 30 : subLists;
     	subLists              = subLists == 0? 1 : subLists;
     	
     	dataBufferSize        = (long)(dataBufferSize / subLists);
