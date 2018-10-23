@@ -17,7 +17,7 @@
 
 package calypte;
 
-import calypte.memory.DirectMemory;
+import java.io.File;
 
 /**
  * 
@@ -30,16 +30,8 @@ public class TestCalypteConfig
 	private static final long serialVersionUID = -8953971203516129784L;
 
 	public TestCalypteConfig(){
-
-        this.nodesBufferSize = 2*1024*1024;
-        this.indexBufferSize = 32*1024*1024;
-        this.dataBufferSize  = 32*1024*1024;
-        this.maxSizeEntry    = 1024*1024;
-        this.maxSizeKey      = 100;
-        this.dataPath        = "/mnt/calypte";
-        this.memory          = new DirectMemory();
-        
         apply(new Configuration());
+        System.setProperty("java.io.tmpdir", super.getDataPath() + File.separator + "tmp");
 	}
 	
 }

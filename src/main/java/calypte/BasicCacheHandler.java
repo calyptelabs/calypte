@@ -142,7 +142,7 @@ public class BasicCacheHandler implements CacheHandler{
         this.dataList               = this.createDataBuffer(name, this.entityFileManager, config);
         this.dataMap                = this.createDataMap(name, this.entityFileManager, config);
         this.enabled                = true;
-        this.creationTime           = System.currentTimeMillis();
+        this.creationTime           = 0;
         this.countRead              = new AtomicLong();
         this.countWrite             = new AtomicLong();
         this.countRemoved           = new AtomicLong();
