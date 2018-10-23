@@ -18,6 +18,7 @@
 package calypte.collections;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
@@ -42,6 +43,8 @@ public class SimpleReferenceCollection<T>
 	
 	public static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 	
+	public static final String FILE_TYPE = ".fsr";
+	
 	private FreeManager freeAddress;
 	
 	private SwapCollection<T> collection;
@@ -53,6 +56,23 @@ public class SimpleReferenceCollection<T>
     private Lock lock;
 
     private long length;
+    
+    static {
+    	File root = new File(TMP_DIR);
+    	File[] list = root.listFiles(new FileFilter() {
+			
+			public boolean accept(File pathname) {
+				return pathname.getAbsolutePath().endsWith(".fsr");
+			}
+		});
+    	
+    	for(File f: list) {
+    		if(f.isFile()) {
+    			f.delete();
+    		}
+    	}
+    	
+    }
     
     public SimpleReferenceCollection() {
         this(
@@ -222,7 +242,7 @@ public class SimpleReferenceCollection<T>
 		}
 		
 		private void persistData() {
-			File f = new File(TMP_DIR, prefixFileName + group);
+			File f = new File(TMP_DIR, prefixFileName + group + FILE_TYPE);
 			FileOutputStream stream         = null;
 			ObjectOutputStream objectStream = null;
 			try {
@@ -260,7 +280,7 @@ public class SimpleReferenceCollection<T>
 		}
 		
 		private void loadData() {
-			File f = new File(TMP_DIR, prefixFileName + group);
+			File f = new File(TMP_DIR, prefixFileName + group + FILE_TYPE);
 			FileInputStream stream          = null;
 			ObjectInputStream objectStream  = null;
 			try {
