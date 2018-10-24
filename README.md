@@ -13,6 +13,6 @@ Permite o armazenamento de dados na forma de chave-valor em memoria e disco.
  <dependency>
      <groupId>calypte</groupId>
      <artifactId>calypte</artifactId>
-     <version>1.0.2.0</version>
+     <version>1.0.2.1</version>
  </dependency>
  ```
