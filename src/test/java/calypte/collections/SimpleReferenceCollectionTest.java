@@ -140,10 +140,10 @@ public class SimpleReferenceCollectionTest extends TestCase{
 			src.remove(i);
 		}
 		
-		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_0").exists());
-		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_1").exists());
-		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_2").exists());
-		assertFalse(new File(tmpPath, (src.FreeManagerIDS - 1) + "_3").exists());
+		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_0" + src.FILE_TYPE).exists());
+		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_1" + src.FILE_TYPE).exists());
+		assertTrue(new File(tmpPath, (src.FreeManagerIDS - 1) + "_2" + src.FILE_TYPE).exists());
+		assertFalse(new File(tmpPath, (src.FreeManagerIDS - 1) + "_3" + src.FILE_TYPE).exists());
 		
 		for(int i=0;i<SimpleReferenceCollection.GROUP_SIZE*4;i++) {
 			src.insert(new Long(i));

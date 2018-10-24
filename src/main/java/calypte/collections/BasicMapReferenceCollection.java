@@ -191,7 +191,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
-            return this.put(key, next, value);
+            T r = this.put(key, next, value);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.setValue(nodes, values, node, value);
@@ -202,7 +204,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
-            return this.replace(key, next, oldValue, value);
+            boolean r = this.replace(key, next, oldValue, value);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.replaceValue(nodes, values, node, oldValue, value);
@@ -213,7 +217,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
-            return this.replace(key, next, value);
+            T r =  this.replace(key, next, value);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.replaceValue(nodes, values, node, value);
@@ -224,7 +230,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, false);
-            return this.putIfAbsent(key, next, value);
+            T r = this.putIfAbsent(key, next, value);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.putIfAbsentValue(nodes, values, node, value);
@@ -235,10 +243,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(nodes, key, node, true);
-            if(next == null)
-                return null;
-            else
-                return this.get(key, next);
+            T r = next == null? null : this.get(key, next);
+            next = null;
+            return r;
         }
         else
             return this.treeNodes.getValue(nodes, values, node);
@@ -249,10 +256,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, true);
-            if(next == null)
-                return null;
-            else
-                return (T)remove(key, next);
+            T r = next == null? null : remove(key, next);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.removeValue(nodes, values, node);
@@ -264,10 +270,9 @@ public class BasicMapReferenceCollection<K,T>
         
         if(!this.treeNodes.isEquals(key, node)){
             TreeNode<T> next = this.treeNodes.getNext(this.nodes, key, node, true);
-            if(next == null)
-                return false;
-            else
-                return remove(key, next, oldValue);
+            boolean r = next == null? false : remove(key, next, oldValue);
+            next = null;
+            return r;
         }
         else{
         	return this.treeNodes.removeValue(nodes, values, node, oldValue);
@@ -285,14 +290,18 @@ public class BasicMapReferenceCollection<K,T>
     	
 		Object[] nexKeys = node.getNextNodes();
 		
+		TreeNode<T> n;
+		
 		for(Object k: nexKeys) {
-			TreeNode<T> n = node.getNext(nodes, k);
+			n = node.getNext(nodes, k);
 			if(n != null && f.acceptNodeKey(k)) {
 				f.beforeNextNode(k, n);
 				find(f, n);
 				f.afterNextNode(k, n);
 			}
 		}
+		
+		n = null;
     	
     }
     

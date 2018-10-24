@@ -41,13 +41,19 @@ class HugeListCalculator {
 
     	if(blockSize > dataPageSize)
     		throw new IllegalArgumentException("block size > page size");
-    	
-    	double subLists       = (dataBufferSize / (blockSize*2048L));
-    	//subLists = 1;
-    	subLists              = subLists > 20? 20 : subLists;
-    	subLists              = subLists == 0? 1 : subLists;
 
-    	//dataBufferSize        = (long)(dataBufferSize / subLists);
+    	if(dataBufferSize < 1.5*1024.0*1024.0) {
+    		throw new IllegalArgumentException("buffer size < 1.5mb");
+    	}
+    	
+    	double subLists       = (dataBufferSize / 268435456L);
+    	//subLists = 1;
+    	subLists              = subLists > 30? 30 : subLists;
+    	subLists              = subLists == 0? 1 : subLists;
+    	
+    	dataBufferSize        = (long)(dataBufferSize / subLists);
+    	
+    	dataBufferSize -= 1024*1024; // FREE_GROUP_SIZE do SimpleReferenceCollection
     	
     	//Quantidade de blocos na memória.
     	double blocksLength   = dataBufferSize/blockSize;

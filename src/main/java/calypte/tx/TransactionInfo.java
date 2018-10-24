@@ -83,7 +83,7 @@ public class TransactionInfo implements TransactionCacheHandler {
 		try{
 			DataMap dta = getEntity(manager, cache, key, true);
 			
-			if(dta != null){
+			if(dta != null && !dta.isDead(getCreationTime())){
 				putEntity(manager, cache, key, dta, inputData, timeToLive, timeToIdle);
 				return true;
 			}
@@ -104,7 +104,7 @@ public class TransactionInfo implements TransactionCacheHandler {
 		try{
 			DataMap dta = getEntity(manager, cache, key, true);
 			
-			if(dta == null){
+			if(dta == null || dta.isDead(getCreationTime())){
 				putEntity(manager, cache, key, dta, inputData, timeToLive, timeToIdle);
 				return null;
 			}
@@ -123,9 +123,9 @@ public class TransactionInfo implements TransactionCacheHandler {
     		throws StorageException {
 
     	try{
-    		DataMap o = getEntity(manager, cache, key, true);
-    		putEntity(manager, cache, key, o, inputData, timeToLive, timeToIdle);
-    		return o != null;
+    		DataMap oldMap = getEntity(manager, cache, key, true);
+    		putEntity(manager, cache, key, oldMap, inputData, timeToLive, timeToIdle);
+    		return oldMap != null && !oldMap.isDead(getCreationTime());
     	}
 		catch(CacheException e){
 			throw new StorageException(e, e.getError(), e.getParams());
@@ -145,7 +145,7 @@ public class TransactionInfo implements TransactionCacheHandler {
     	
     	try{
 			DataMap dta = getEntity(manager, cache, key, forUpdate);
-			return dta == null || dta.getCreationTime() < cache.getCreationTime() ? 
+			return dta == null || dta.isDead(getCreationTime())? 
 					null : 
 					cache.getStream(key, dta);
     	}

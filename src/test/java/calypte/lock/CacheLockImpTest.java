@@ -71,6 +71,7 @@ public class CacheLockImpTest extends TestCase{
 		assertNull(cacheLock.locks.get("teste"));
 	}
 	
+	/*
 	public void testPerformance() throws InterruptedException {
 		
 		final CacheLockImp<String> cacheLock = new CacheLockImp<String>();
@@ -114,5 +115,6 @@ public class CacheLockImpTest extends TestCase{
 		
 		
 	}
+	*/
 	
 }

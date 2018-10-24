@@ -52,8 +52,7 @@ import calypte.collections.MapReferenceCollection;
 import calypte.collections.MapReferenceCollection.Find;
 import calypte.collections.Swapper;
 import calypte.collections.treehugemap.CharNode;
-import calypte.collections.treehugemap.CharNodeUtil;
-import calypte.collections.treehugemap.StringTreeNodes;
+import calypte.collections.treehugemap.DataMapStringTreeNodes;
 import calypte.collections.treehugemap.TreeNode;
 import calypte.memory.Memory;
 import calypte.memory.RegionMemory;
@@ -67,11 +66,29 @@ public class BasicCacheHandler implements CacheHandler{
 
     private static final long serialVersionUID                 = 8023029671447700902L;
 
-    private static final int ENTRY_BINARY_SIZE                 = 48;
-    
-    private static final int NODE_BINARY_SIZE                  = CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
+    private static final int ENTRY_SIZE                        = 58;
 
-    private static final int INDEX_BINARY_SIZE                 = 58 + ENTRY_BINARY_SIZE;
+    /* node size */
+    
+    private static final int CHAR_NODE_SIZE                    = 40;
+
+    private static final int LONG_ARRAY_CHAR_NODE_SIZE         = 784;
+
+    private static final int NODE_SIZE                         = ENTRY_SIZE + CHAR_NODE_SIZE + LONG_ARRAY_CHAR_NODE_SIZE;//CharNodeUtil.DATA_SIZE + ENTRY_BINARY_SIZE;
+
+    /* index size */
+
+    private static final int DATA_MAP_SIZE                     = 78;
+    
+    private static final int INDEX_SIZE                        = DATA_MAP_SIZE + ENTRY_SIZE;//58 + ENTRY_BINARY_SIZE;
+    
+    /* block data size base */
+    
+    private static final int BLOCK_SIZE                        = 48;
+
+    private static final int REGION_MEMORY_SIZE                = 32;
+    
+    private static final int BLOCK_DATA_SIZE                   = REGION_MEMORY_SIZE + BLOCK_SIZE;
     
     private static final Class<?> ITEM_CACHE_INPUTSTREAM_CLASS = ItemCacheInputStream.class;
     
@@ -125,7 +142,7 @@ public class BasicCacheHandler implements CacheHandler{
         this.dataList               = this.createDataBuffer(name, this.entityFileManager, config);
         this.dataMap                = this.createDataMap(name, this.entityFileManager, config);
         this.enabled                = true;
-        this.creationTime           = System.currentTimeMillis();
+        this.creationTime           = 0;
         this.countRead              = new AtomicLong();
         this.countWrite             = new AtomicLong();
         this.countRemoved           = new AtomicLong();
@@ -193,7 +210,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getDataBufferSize(),
 	    						config.getDataPageSize(),
-	    						config.getDataBlockSize());
+	    						config.getDataBlockSize() + BLOCK_DATA_SIZE);
 	    	
 	    	Swapper<Block>[] swappers = new Swapper[dataInfo.getSubLists()];
 	    	
@@ -236,7 +253,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getNodesBufferSize(),
 	    						config.getNodesPageSize(),
-	    						NODE_BINARY_SIZE);
+	    						NODE_SIZE);
 
     		Swapper[] nodesSwappers = new Swapper[nodeInfo.getSubLists()];
 	    	
@@ -258,7 +275,7 @@ public class BasicCacheHandler implements CacheHandler{
 	    				.calculate(
 	    						config.getIndexBufferSize(),
 	    						config.getIndexPageSize(),
-	    						INDEX_BINARY_SIZE);
+	    						INDEX_SIZE);
     		
 
     		Swapper<DataMap>[] indexSwappers = new Swapper[indexInfo.getSubLists()];
@@ -285,7 +302,7 @@ public class BasicCacheHandler implements CacheHandler{
                             indexInfo.getFragmentFactorElements(),
                             indexSwappers,
                             indexInfo.getSubLists(), 
-                            new StringTreeNodes<DataMap>()
+                            new DataMapStringTreeNodes(this)
     				);
             		
             		
@@ -328,10 +345,10 @@ public class BasicCacheHandler implements CacheHandler{
             map.setTimeToLive(itemMetadata.getTimeToLive());
             
         	//o cache transacional pode tentar restaurar um item já expirado.
-            //Nesse caso, tem que remove-lo. 
+            //Nesse caso, tem que remover. 
             //Somente será removido se o item ainda for o mesmo gerenciado pela transação.
-            if(map.isDead()){
-            	this.remove(key, map);
+            if(map.isDead(creationTime)){
+            	//this.remove(key, map);
             	return false;
             }
             
@@ -389,7 +406,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
         
         this.countWrite.incrementAndGet();
-        return oldMap != null;
+        return oldMap != null && !oldMap.isDead(creationTime);
     }
 
     public boolean replaceStream(String key, InputStream inputData, 
@@ -435,8 +452,7 @@ public class BasicCacheHandler implements CacheHandler{
         }
 
         try{
-            //Faz a indexação do item e retorna o índice atual, caso exista.
-            oldMap = this.dataMap.replace(key, map);
+            oldMap = dataMap.replace(key, map);
         }
         catch(Throwable e){
         	try{
@@ -451,7 +467,12 @@ public class BasicCacheHandler implements CacheHandler{
         }
         finally{
 	    	if(oldMap != null){
-	    		this.releaseSegments(oldMap);
+	    		//Se oldMap foi substituido, remover os segmentos associados ao oldMap
+	    		releaseSegments(oldMap);
+	    	}
+	    	else {
+	    		//Se oldMap não foi substituido, remover os segmentos associados ao map
+	    		releaseSegments(map);
 	    	}
         }
         
@@ -507,7 +528,6 @@ public class BasicCacheHandler implements CacheHandler{
         }
 
         try{
-            //Faz a indexação do item e retorna o índice atual, caso exista.
             oldMap = dataMap.putIfAbsent(key, map);
         }
         catch(Throwable e){
@@ -524,44 +544,45 @@ public class BasicCacheHandler implements CacheHandler{
         
     	//se oldMap for diferente de null, significa que já existe um item no cache
         if(oldMap != null){
-        	//remove os segmentos alocados para o item atual.
-        	//se oldMap for diferente de null, map não foi registrado
-        	//somente precisa liberar os segmentos alocados
-    		this.releaseSegments(map);
-    		
-        	//tenta obter o stream do item no cache
-        	in = this.getStream(key, oldMap);
-        }
-        else{
-        	this.countWrite.incrementAndGet();
+        	
+        	if(!oldMap.isDead(creationTime)) {
+	        	//remove os segmentos alocados para o item atual.
+	        	//se oldMap for diferente de null, map não foi registrado
+	        	//somente precisa liberar os segmentos alocados
+	    		releaseSegments(map);
+	    		
+	        	//tenta obter o stream do item no cache
+	        	in = getStream(key, oldMap);
+	        	
+		    	if(in == null){
+		    		//será lançada uma exceção se o item não existir
+		    		throw new StorageException(CacheErrors.ERROR_1030);
+		    	}
+		    	else{
+		    		//retorna o stream
+		        	countWrite.incrementAndGet();
+		    		return in;
+		    	}
+        	}
+        	else {
+        		releaseSegments(oldMap);
+        	}
+        	
         }
         
-        if(oldMap != null){
-	    	if(in == null){
-	    		//será lançada uma exceção se o item não existir
-	    		throw new StorageException(CacheErrors.ERROR_1030);
-	    	}
-	    	else{
-	    		//retorna o stream
-	    		return in;
-	    	}
-        }
-        else{
-        	return null;
-        }
-        
+        return null;
     }
     
     public InputStream getStream(String key) throws RecoverException {
         DataMap map = dataMap.get(key);
-    	return map == null || map.getCreationTime() < creationTime? null : getStream(key, map);
+    	return map == null || map.isDead(creationTime)? null : getStream(key, map);
     }
     
 	public boolean removeIfInvalid(String key) throws StorageException {
         try{
         	DataMap data = this.dataMap.get(key);
 
-            if(data != null && (data.getCreationTime() < creationTime || data.isDead())){
+            if(data != null && data.isDead(creationTime)){
             	remove(key, data);
             	return true;
             }
@@ -580,7 +601,7 @@ public class BasicCacheHandler implements CacheHandler{
 
             if(data != null){
             	remove(key, data);
-            	return true;
+            	return !data.isDead(creationTime);
             }
             else
                 return false;
@@ -642,7 +663,7 @@ public class BasicCacheHandler implements CacheHandler{
             countRead.incrementAndGet();
 
         	//Verifica se o item já expirou
-        	if(map.isDead()){
+        	if(map.isDead(creationTime)){
         		//Vai ser removido pelo processo de limpeza
         		//remove(key, map);
         		return null;

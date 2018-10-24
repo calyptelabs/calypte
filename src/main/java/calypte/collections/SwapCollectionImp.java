@@ -206,6 +206,7 @@ public class SwapCollectionImp<T>
             throw new IllegalStateException();
         }
         
+        removedItem = null;
     }
 
 	protected Entry<T> swapOnMemory(long key){
