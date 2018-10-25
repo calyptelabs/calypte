@@ -19,8 +19,8 @@ package calypte.buffer;
 
 public interface SwapBuffer {
 
-	void release(Buffer buffer, long off, int segment, int len);
+	void release(Buffer buffer, int segment, int block);
 	
-	void reload(Buffer buffer, long off, int segment, int len);
+	void reload(Buffer buffer, int segment, int block);
 	
 }

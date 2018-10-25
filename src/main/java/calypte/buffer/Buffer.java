@@ -19,12 +19,12 @@ package calypte.buffer;
 
 public interface Buffer {
 	
-	int alloc();
+	long alloc();
 	
-	int read(int segment, int offset, byte[] buf, int off, int len);
+	int read(long offset, byte[] buf, int off, int len);
 	
-	void write(int segment, int offset, byte[] buf, int off, int len);
+	void write(long offset, byte[] buf, int off, int len);
 	
-	void release(int segment);
+	void release(long segment);
 	
 }
