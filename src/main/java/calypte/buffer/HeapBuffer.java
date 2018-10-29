@@ -17,70 +17,29 @@
 
 package calypte.buffer;
 
+import java.util.Map;
+
 public class HeapBuffer implements Buffer{
 
-	private int[][] data;
-	
-	private int blockSize;
-	
-	private SwapBuffer swap;
-	
-	private int maxRegionOffset;
-	
-	public HeapBuffer(long size, int blockSize) {
-		this.maxRegionOffset  = (Integer.MAX_VALUE/blockSize)*blockSize;
-		int regions = (int) (size/maxRegionOffset);
-		regions     += size % maxRegionOffset != 0? 1 : 0;
-
-		this.data = new int[regions][];
-		this.blockSize = blockSize;
-
-		int seg = 0;
-		
-		while(size > 0) {
-			int len = (int) (size > maxRegionOffset? maxRegionOffset : size);
-			data[seg++] = new int[len];
-			size -= len;
-		}
-		
-	}
-	
 	public long alloc() {
-		return -1;
-	}
-	
-	public int read(int offset, byte[] buf, int off, int len) {
-		int maxRead = blockSize - offset;
-		int read = len > maxRead? maxRead : len;
-		readVOffset(offset, buf, off, read); 
-		return read;
-	}
-	
-	public void readVOffset(long vOffset, byte[] dest, int off, int len) {
-		long offset = reloadVOffset(vOffset);
-		int segreg  = (int)(offset / maxRegionOffset);
-		int offreg  = (int)(offset % maxRegionOffset);
-		System.arraycopy(data[segreg], offreg, dest, off, len);
-	}
-	
-	public void write(int segment, int offset, byte[] buf, int off, int len) {
-		int maxRead = blockSize - offset;
-		int read = len > maxRead? maxRead : len;
-		writeVOffset(offset, buf, off, read); 
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
-	public void writeVOffset(long vOffset, byte[] dest, int off, int len) {
-		long offset = reloadVOffset(vOffset);
-		int segreg  = (int)(offset / maxRegionOffset);
-		int offreg  = (int)(offset % maxRegionOffset);
-		System.arraycopy(dest, off, data[segreg], offreg, len);
-	}
-	
-	public void release(int segment) {
+	public int read(long offset, byte[] buf, int off, int len) {
+		// TODO Auto-generated method stub
+		return 0;
 	}
 
-	private long reloadVOffset(long offset) {
-		return -1;
+	public void write(long offset, byte[] buf, int off, int len) {
+		// TODO Auto-generated method stub
+		
 	}
+
+	public void release(long segment) {
+		// TODO Auto-generated method stub
+		
+	}
+
 	
 }
