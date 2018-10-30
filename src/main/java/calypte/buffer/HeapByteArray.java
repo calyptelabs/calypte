@@ -78,18 +78,18 @@ public class HeapByteArray implements ByteArray{
 		long value = 0;
 		int len    = bytes;
 		
-		if(offset >= size) {
-			throw new IndexOutOfBoundsException(offset + " >= " + size);
+		if(offset + bytes > size) {
+			throw new IndexOutOfBoundsException(offset + bytes + " > " + size);
 		}
 		
 		long maxRead = size - offset;
 		len = (int)(len > maxRead? maxRead : len);
 		
-		int s = (int) (offset >> 32);
-		int o = (int) (offset & 0xFFFF);
+		int s  = (int)(offset >> 32);
+		long o = offset & 0xFFFFFFFFL;
 		
-		int r1 = data[s].length - o;
-		int r2 = len - r1;
+		long r1 = data[s].length - o;
+		long r2 = len - r1;
 		
 		
 		if(len > r1) {
@@ -113,28 +113,28 @@ public class HeapByteArray implements ByteArray{
 	
 	public int read(long offset, byte[] buf, int off, int len) {
 		
-		if(offset >= size) {
-			return -1;
+		if(offset + len > size) {
+			throw new IndexOutOfBoundsException(offset + len + " > " + size);
 		}
 		
 		long maxRead = size - offset;
 		len = (int)(len > maxRead? maxRead : len);
 		
-		int s = (int) (offset >> 32);
-		int o = (int) (offset & 0xFFFF);
+		int s  = (int)(offset >> 32);
+		long o = offset & 0xFFFFFFFFL;
 		
-		int r1 = data[s].length - o;
-		int r2 = len - r1;
+		long r1 = data[s].length - o;
+		long r2 = len - r1;
 		
 		
 		if(len > r1) {
-			System.arraycopy(data[s    ], o, buf, off, r1);
-			System.arraycopy(data[s + 1], 0, buf, off + r1, r2);
-			return r1 + r2;
+			UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, buf, LONG_ARRAY_OFFSET + off     , r1);
+			UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , buf, LONG_ARRAY_OFFSET + off + r1, r2);
+			return (int)(r1 + r2);
 		}
 		else {
-			System.arraycopy(data[s], o, buf, off, len);
-			return r1;
+			UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, buf, LONG_ARRAY_OFFSET + off, len);
+			return (int)r1;
 		}
 		
 	}
@@ -156,18 +156,19 @@ public class HeapByteArray implements ByteArray{
 	}
 	
 	private void writeNumber(long offset, long value, int bytes) {
-		if(offset >= size) {
-			throw new IndexOutOfBoundsException(offset + " >= " + size);
+		
+		if(offset + bytes > size) {
+			throw new IndexOutOfBoundsException(offset + bytes + " > " + size);
 		}
 		
 		long maxRead = size - offset;
 		int len = (int)(bytes > maxRead? maxRead : bytes);
 
-		int s = (int) (offset >> 32);
-		int o = (int) (offset & 0xFFFF);
+		int s  = (int)(offset >> 32);
+		long o = offset & 0xFFFFFFFFL;
 		
-		int r1 = data[s].length - o;
-		int r2 = len - r1;
+		long r1 = data[s].length - o;
+		long r2 = len - r1;
 		
 		
 		if(len > r1) {
@@ -188,26 +189,26 @@ public class HeapByteArray implements ByteArray{
 	
 	public void write(long offset, byte[] buf, int off, int len) {
 		
-		if(offset >= size) {
-			throw new IndexOutOfBoundsException(offset + " >= " + size);
+		if(offset + len > size) {
+			throw new IndexOutOfBoundsException(offset + len + " > " + size);
 		}
 		
 		long maxRead = size - offset;
 		len = (int)(len > maxRead? maxRead : len);
 		
-		int s = (int) (offset >> 32);
-		int o = (int) (offset & 0xFFFF);
+		int s  = (int)(offset >> 32);
+		long o = offset & 0xFFFFFFFFL;
 		
-		int r1 = data[s].length - o;
-		int r2 = len - r1;
+		long r1 = data[s].length - o;
+		long r2 = len - r1;
 		
 		
 		if(len > r1) {
-			System.arraycopy(buf, off     , data[s    ], o, r1);
-			System.arraycopy(buf, off + r1, data[s + 1], 0, r2);
+			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
+			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
 		}
 		else {
-			System.arraycopy(buf, off, data[s], o, len);
+			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off, data[s], BYTE_ARRAY_OFFSET + o, len);
 		}
 
 		

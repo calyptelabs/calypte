@@ -1,5 +1,8 @@
 package calypte.buffer;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+
 public class VirtualSegmentMapping {
 
 	protected ByteArray data;
@@ -12,19 +15,19 @@ public class VirtualSegmentMapping {
 	
 	private List itens;
 	
-	protected int hashMask;
+	protected long hashMask;
 	
-	protected int size;
+	protected long size;
 	
-	protected int tableSize;
+	protected long tableSize;
 	
-	protected int tableOffset;
+	protected long tableOffset;
 
-	protected int entryOffset;
+	protected long entryOffset;
 	
-	public VirtualSegmentMapping(ByteArray data, int tableOffset, int size) {
+	public VirtualSegmentMapping(ByteArray data, int tableOffset, long size) {
 		this.size        = size;
-		this.tableSize   = size >> 4;
+		this.tableSize   = new BigDecimal(size).multiply(new BigDecimal(0.1), MathContext.DECIMAL128).longValue();
 		this.hashMask    = getHashMask(this.tableSize) >> 2;
 		this.tableOffset = tableOffset;
 		this.entryOffset = this.tableSize;
@@ -39,12 +42,12 @@ public class VirtualSegmentMapping {
 	}
 	
 	private void createFreeMap(){
-		int tableIndex = tableSize >> 2;
-		for(int i=0;i<tableIndex;i++) {
-			this.table.setRootIndex(i, -1);
+		long tableIndex = tableSize >> 2;
+		for(long i=0;i<tableIndex;i++) {
+			this.data.writeInt(i << 2, -1);
 		}
 		
-		int indexSize = (size - entryOffset) >> 5;
+		long indexSize = (size - entryOffset) >> 5;
 		for(int i=0;i<indexSize;i++) {
 			this.free.add(i);
 		}
@@ -73,7 +76,7 @@ public class VirtualSegmentMapping {
         return position; 
     }
 
-	private int getHashMask(int n){
+	private int getHashMask(long n){
 		int hm = 0;
 		
 		while(hm < n) {
@@ -202,17 +205,15 @@ public class VirtualSegmentMapping {
 		}
 		
 		protected int getRootIndex(long key) {
-			int hash    = (int)(key & hashMask);
+			long hash   = key & hashMask;
 			long offset = tableOffset + (hash << 2);
 			int r = data.readInt(offset);
-			System.out.println("key: " + key + ", index: " + r + ", offset: " + offset);
 			return r;
 		}
 		
 		protected void setRootIndex(long key, int index) {
-			int hash    = (int)(key & hashMask);
+			long hash    = key & hashMask;
 			long offset = tableOffset + (hash << 2);
-			System.out.println("key: " + key + ", index: " + index + ", offset: " + offset);
 			data.writeInt(offset, index);
 		}
 		
@@ -228,43 +229,43 @@ public class VirtualSegmentMapping {
 		
 		private static final int VALUE_OFFSET    = 16;
 		
-		public int getNext(int index) {
-			int offset = entryOffset + (index << 5) + NEXT_OFFSET;
+		public int getNext(long index) {
+			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
 			return data.readInt(offset);
 		}
 
-		public int getPrevious(int index) {
-			int offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
+		public int getPrevious(long index) {
+			long offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
 			return data.readInt(offset);
 		}
 
-		public long getKey(int index) {
-			int offset = entryOffset + (index << 5) + KEY_OFFSET;
+		public long getKey(long index) {
+			long offset = entryOffset + (index << 5) + KEY_OFFSET;
 			return data.readLong(offset);
 		}
 		
-		public long getValue(int index) {
-			int offset = entryOffset + (index << 5) + VALUE_OFFSET;
+		public long getValue(long index) {
+			long offset = entryOffset + (index << 5) + VALUE_OFFSET;
 			return data.readLong(offset);
 		}
 
-		public void setNext(int index, int value) {
-			int offset = entryOffset + (index << 5) + NEXT_OFFSET;
+		public void setNext(long index, int value) {
+			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
 			data.writeInt(offset, value);
 		}
 
-		public void setPrevious(int index, int value) {
-			int offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
+		public void setPrevious(long index, int value) {
+			long offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
 			data.writeInt(offset, value);
 		}
 
-		public void setKey(int index, long value) {
-			int offset = entryOffset + (index << 5) + KEY_OFFSET;
+		public void setKey(long index, long value) {
+			long offset = entryOffset + (index << 5) + KEY_OFFSET;
 			data.writeLong(offset, value);
 		}
 		
-		public void setValue(int index, long value) {
-			int offset = entryOffset + (index << 5) + VALUE_OFFSET;
+		public void setValue(long index, long value) {
+			long offset = entryOffset + (index << 5) + VALUE_OFFSET;
 			data.writeLong(offset, value);
 		}
 		
