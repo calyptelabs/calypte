@@ -136,19 +136,21 @@ public class VirtualSegmentMapping {
 				e.setValue(index, value);
 				
 				if(root == -1) {
-					setRootIndex(key, index);
 					e.setNext(index, -1);
 					e.setPrevious(index, -1);
+					setRootIndex(key, index);
 				}
 				else {
 					e.setNext(index, root);
 					e.setPrevious(index, -1);
+					setRootIndex(key, index);
 				}
 			}
 			else {
 				e.setValue(index, value);
 			}
 			
+			itens.add(index);
 			return oldValue;
 		}
 		

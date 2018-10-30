@@ -47,7 +47,7 @@ public class HeapByteArray implements ByteArray{
 		long value = 0;
 		int len    = bytes;
 		
-		if(offset + len >= size) {
+		if(offset >= size) {
 			throw new IndexOutOfBoundsException(offset + " >= " + size);
 		}
 		
