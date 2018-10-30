@@ -2,30 +2,30 @@ package calypte.buffer;
 
 public class VirtualSegmentMapping {
 
-	private ByteArray data;
+	protected ByteArray data;
 
-	private Table table;
+	protected Table table;
 	
-	private Entry e;
+	protected Entry e;
 	
-	private List free;
+	protected List free;
 	
 	private List itens;
 	
-	private int hashMask;
+	protected int hashMask;
 	
-	private int size;
+	protected int size;
 	
-	private int tableSize;
+	protected int tableSize;
 	
-	private int tableOffset;
+	protected int tableOffset;
 
-	private int entryOffset;
+	protected int entryOffset;
 	
 	public VirtualSegmentMapping(ByteArray data, int tableOffset, int size) {
 		this.size        = size;
 		this.tableSize   = size >> 4;
-		this.hashMask    = getHashMask(this.tableSize);
+		this.hashMask    = getHashMask(this.tableSize) >> 2;
 		this.tableOffset = tableOffset;
 		this.entryOffset = this.tableSize;
 		this.data        = data;
@@ -85,7 +85,7 @@ public class VirtualSegmentMapping {
 		
     }
 	
-	private class Table {
+	public class Table {
 		
 		public long getEntry(long key) {
 			int root  = getRootIndex(key);
@@ -93,7 +93,13 @@ public class VirtualSegmentMapping {
 			
 			for(;index != -1 && e.getKey(index) != key;index = e.getNext(index));
 			
-			return index == -1? -1 : e.getValue(index);
+			if(index != -1) {
+				itens.remove(index);
+				itens.add(index);
+				return e.getValue(index);
+			}
+			
+			return -1; 
 		}
 
 		public long putEntry(long key, long value) {
@@ -115,11 +121,12 @@ public class VirtualSegmentMapping {
 					int next     = e.getNext(index);
 					long oldKey  = e.getKey(index);
 					oldValue     = e.getValue(index);
+					
 					if(previous == -1) {
 						
 						if(next != -1) {
 							e.setPrevious(next, -1);
-							setRootIndex(oldKey, index);
+							setRootIndex(oldKey, next);
 						}
 						else {
 							setRootIndex(oldKey, -1);
@@ -127,7 +134,9 @@ public class VirtualSegmentMapping {
 					}
 					else {
 						e.setNext(previous, next);
-						e.setPrevious(next, previous);
+						if(next != -1) {
+							e.setPrevious(next, previous);
+						}
 					}
 					
 				}
@@ -143,6 +152,10 @@ public class VirtualSegmentMapping {
 				else {
 					e.setNext(index, root);
 					e.setPrevious(index, -1);
+					
+					//e.setNext(root, -1);
+					e.setPrevious(root, index);
+					
 					setRootIndex(key, index);
 				}
 			}
@@ -188,15 +201,18 @@ public class VirtualSegmentMapping {
 			return true;
 		}
 		
-		private int getRootIndex(long key) {
+		protected int getRootIndex(long key) {
 			int hash    = (int)(key & hashMask);
 			long offset = tableOffset + (hash << 2);
-			return data.readInt(offset);
+			int r = data.readInt(offset);
+			System.out.println("key: " + key + ", index: " + r + ", offset: " + offset);
+			return r;
 		}
 		
-		private void setRootIndex(long key, int index) {
+		protected void setRootIndex(long key, int index) {
 			int hash    = (int)(key & hashMask);
 			long offset = tableOffset + (hash << 2);
+			System.out.println("key: " + key + ", index: " + index + ", offset: " + offset);
 			data.writeInt(offset, index);
 		}
 		
