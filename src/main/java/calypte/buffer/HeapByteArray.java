@@ -46,7 +46,6 @@ public class HeapByteArray implements ByteArray{
 	private long readNumber(long offset, int bytes) {
 		long value = 0;
 		int len    = bytes;
-		int shl    = 0;
 		
 		if(offset + len >= size) {
 			throw new IndexOutOfBoundsException(offset + " >= " + size);
@@ -63,27 +62,24 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
-			
-			for(int i=0;i<r1;i++) {
-				value |= data[s][o + i] << (1 << shl);
-				shl++;
-			}
-			
-			o += r1;
+
 			s++;
 			
-			for(int i=0;i<r2;i++) {
-				value |= data[s][o + i] << (1 << shl);
-				shl++;
+			for(int i=r2-1;i>=0;i--) {
+				value = value << 8 | (data[s][i] & 0xFF);
+			}
+
+			s--;
+			
+			for(int i=data[s].length - 1;i>=o;i--) {
+				value = value << 8 | (value |= data[s][i] & 0xFF);
 			}
 			
 			return value;
 		}
 		else {
-			
-			for(int i=0;i<len;i++) {
-				value += data[s][o] << (1 << shl);
-				shl++;
+			for(int i=len - 1;i>=0;i--) {
+				value = value << 8 | (data[s][o + i] & 0xFF);
 			}
 			
 			return value;
@@ -139,7 +135,7 @@ public class HeapByteArray implements ByteArray{
 		int len    = bytes;
 		int shl    = 0;
 		
-		if(offset + len >= size) {
+		if(offset >= size) {
 			throw new IndexOutOfBoundsException(offset + " >= " + size);
 		}
 		
@@ -157,7 +153,7 @@ public class HeapByteArray implements ByteArray{
 			
 			for(int i=0;i<r1;i++) {
 				data[s][o + i] = (byte)(value >> (1 << shl) & 0xFF);
-				shl++;
+				value = value >> 8;
 			}
 			
 			o += r1;
@@ -165,15 +161,15 @@ public class HeapByteArray implements ByteArray{
 			
 			for(int i=0;i<r2;i++) {
 				data[s][o + i] = (byte)(value >> (1 << shl) & 0xFF);
-				shl++;
+				value = value >> 8;
 			}
 			
 		}
 		else {
 			
 			for(int i=0;i<len;i++) {
-				data[s][o + i] = (byte)(value >> (1 << shl) & 0xFF);
-				shl++;
+				data[s][o + i] = (byte)(value & 0xFF);
+				value = value >> 8;
 			}
 			
 		}

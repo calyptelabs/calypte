@@ -22,21 +22,34 @@ public class VirtualSegmentMapping {
 
 	private int entryOffset;
 	
-	public VirtualSegmentMapping(ByteArray data, int tableOffset, int entryOffset, int size) {
+	public VirtualSegmentMapping(ByteArray data, int tableOffset, int size) {
 		this.size        = size;
-		this.hashMask    = getHashMask(size);
-		this.tableSize   = hashMask >> 2;
+		this.tableSize   = size >> 4;
+		this.hashMask    = getHashMask(this.tableSize);
 		this.tableOffset = tableOffset;
-		this.entryOffset = entryOffset;
+		this.entryOffset = this.tableSize;
 		this.data        = data;
 		
 		this.free  = new List();
 		this.itens = new List();
 		this.e     = new Entry();
 		this.table = new Table();
+		
+		this.createFreeMap();
 	}
 	
-
+	private void createFreeMap(){
+		int tableIndex = tableSize >> 2;
+		for(int i=0;i<tableIndex;i++) {
+			this.table.setRootIndex(i, -1);
+		}
+		
+		int indexSize = (size - entryOffset) >> 5;
+		for(int i=0;i<indexSize;i++) {
+			this.free.add(i);
+		}
+	}
+	
 	public long put(long key, long value) {
 		return table.putEntry(key, value);
 	}
@@ -61,15 +74,15 @@ public class VirtualSegmentMapping {
     }
 
 	private int getHashMask(int n){
-		int rmsb = getRMSB(n);
-		int maxBits = rmsb/2;
-		
 		int hm = 0;
-		for(int i=0;i<maxBits;i++) {
+		
+		while(hm < n) {
 			hm |= hm << 1 | 1;
 		}
 		
+		hm = hm >> 1;
 		return hm;
+		
     }
 	
 	private class Table {
@@ -123,6 +136,7 @@ public class VirtualSegmentMapping {
 				e.setValue(index, value);
 				
 				if(root == -1) {
+					setRootIndex(key, index);
 					e.setNext(index, -1);
 					e.setPrevious(index, -1);
 				}
@@ -207,7 +221,7 @@ public class VirtualSegmentMapping {
 		}
 
 		public long getKey(int index) {
-			int offset = entryOffset + (index << 5) + VALUE_OFFSET;
+			int offset = entryOffset + (index << 5) + KEY_OFFSET;
 			return data.readLong(offset);
 		}
 		
