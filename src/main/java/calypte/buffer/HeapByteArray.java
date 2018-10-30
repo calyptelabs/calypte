@@ -93,20 +93,12 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
-
-			s++;
-			
-			for(int i=r2-1;i>=0;i--) {
-				value = value << 8 | (data[s][i] & 0xFF);
+			synchronized(this) {
+				tmpValue[0] = 0L;
+				UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET     , r1);
+				UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , tmpValue, LONG_ARRAY_OFFSET + r1, r2);
+				value = tmpValue[0];
 			}
-
-			s--;
-			
-			for(int i=data[s].length - 1;i>=o;i--) {
-				value = value << 8 | (value |= data[s][i] & 0xFF);
-			}
-			
-			return value;
 		}
 		else {
 			synchronized(this) {
@@ -114,10 +106,9 @@ public class HeapByteArray implements ByteArray{
 				UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET, bytes);
 				value = tmpValue[0];
 			}
-			
-			return value;
 		}
 		
+		return value;
 	}
 	
 	public int read(long offset, byte[] buf, int off, int len) {
@@ -165,16 +156,13 @@ public class HeapByteArray implements ByteArray{
 	}
 	
 	private void writeNumber(long offset, long value, int bytes) {
-		int len    = bytes;
-		int shl    = 0;
-		
 		if(offset >= size) {
 			throw new IndexOutOfBoundsException(offset + " >= " + size);
 		}
 		
 		long maxRead = size - offset;
-		len = (int)(len > maxRead? maxRead : len);
-		
+		int len = (int)(bytes > maxRead? maxRead : bytes);
+
 		int s = (int) (offset >> 32);
 		int o = (int) (offset & 0xFFFF);
 		
@@ -183,20 +171,11 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
-			
-			for(int i=0;i<r1;i++) {
-				data[s][o + i] = (byte)(value >> (1 << shl) & 0xFF);
-				value = value >> 8;
+			synchronized(this) {
+				tmpValue[0] = value;
+				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
+				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
 			}
-			
-			o += r1;
-			s++;
-			
-			for(int i=0;i<r2;i++) {
-				data[s][o + i] = (byte)(value >> (1 << shl) & 0xFF);
-				value = value >> 8;
-			}
-			
 		}
 		else {
 			synchronized(this) {
