@@ -1,26 +1,57 @@
 package calypte.buffer;
 
+import java.lang.reflect.Field;
+
+import sun.misc.Unsafe;
+
+@SuppressWarnings("restriction")
 public class HeapByteArray implements ByteArray{
 
+	private static final Unsafe UNSAFE;
+	
+	private static final long BYTE_ARRAY_OFFSET;
+
+	private static final long LONG_ARRAY_OFFSET;
+	
+    static {
+        try {
+            Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+            theUnsafe.setAccessible(true);
+            UNSAFE = (Unsafe) theUnsafe.get(null);
+    		BYTE_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
+    		LONG_ARRAY_OFFSET = UNSAFE.arrayBaseOffset(long[].class);
+        }
+        catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+	
+    private final long[] tmpValue;
+    
 	private byte[][] data;
 
 	private long size;
 	
 	public HeapByteArray(long size) {
+		this(size, Integer.MAX_VALUE);
+	}
+	
+	public HeapByteArray(long size, int block) {
 		this.size   = size;
-		int segs = (int) (size/Integer.MAX_VALUE);
-		segs     += size % Integer.MAX_VALUE != 0? 1 : 0;
+		int segs = (int) (size/block);
+		segs     += size % block != 0? 1 : 0;
 
 		this.data = new byte[segs][];
 
 		int seg = 0;
 		
 		while(size > 0) {
-			int len = (int) (size > Integer.MAX_VALUE? Integer.MAX_VALUE : size);
+			int len = (int) (size > block? block : size);
 			data[seg++] = new byte[len];
 			size -= len;
 		}
 		
+		this.tmpValue = new long[1];
 	}
 	
 	public long size() {
@@ -78,8 +109,10 @@ public class HeapByteArray implements ByteArray{
 			return value;
 		}
 		else {
-			for(int i=len - 1;i>=0;i--) {
-				value = value << 8 | (data[s][o + i] & 0xFF);
+			synchronized(this) {
+				tmpValue[0] = 0L;
+				UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET, bytes);
+				value = tmpValue[0];
 			}
 			
 			return value;
@@ -166,12 +199,10 @@ public class HeapByteArray implements ByteArray{
 			
 		}
 		else {
-			
-			for(int i=0;i<len;i++) {
-				data[s][o + i] = (byte)(value & 0xFF);
-				value = value >> 8;
+			synchronized(this) {
+				tmpValue[0] = value;
+				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET, data[s], BYTE_ARRAY_OFFSET + o, bytes);
 			}
-			
 		}
 		
 	}	

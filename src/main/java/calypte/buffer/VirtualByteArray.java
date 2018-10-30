@@ -2,34 +2,39 @@ package calypte.buffer;
 
 public class VirtualByteArray implements ByteArray{
 
-	private long mappingOffset;
+	private long size;
 	
-	private long mappingSize;
-
-	private long dataSize;
-
-	private long dataOffset;
+	private ByteArray memory;
 	
-	private ByteArray data;
+	private VirtualSegmentMapping segmentMapping;
 	
 	private int blockSize;
 	
-	private long size;
+	private long dataSize;
+	
+	private long mappingSize;
 	
 	public VirtualByteArray(long bytesMemory, long size, int blockSize) {
-		this.blockSize = blockSize;
-		this.data = new HeapByteArray(bytesMemory);
-		this.size = size;
-		
-		this.dataSize = bytesMemory/((blockSize + 8)/blockSize);
-		this.mappingSize = bytesMemory - this.dataSize;
-		
-		this.mappingOffset = 0;
-		this.dataOffset = this.mappingSize;
+		this.blockSize      = blockSize;
+		this.memory         = this.createByteArray(bytesMemory);
+		this.size           = size;
+		this.dataSize       = bytesMemory/((blockSize + 33)/blockSize);
+		this.mappingSize    = bytesMemory - this.dataSize;
+		this.segmentMapping = new VirtualSegmentMapping(this.memory, 0, (int)mappingSize);
 	}
 
-	public long readLong(long offset) {
-		// TODO Auto-generated method stub
+	protected ByteArray createByteArray(long bytesMemory) {
+		return new HeapByteArray(bytesMemory);
+	}
+	
+	public long readLong(long vOffset) {
+		
+		long offset = this.segmentMapping.get(vOffset);
+		
+		if(offset == -1) {
+			offset = this.reloadSegment(vOffset);
+		}
+		
 		return 0;
 	}
 
@@ -79,9 +84,11 @@ public class VirtualByteArray implements ByteArray{
 	}
 
 	public long size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return size;
 	}
 	
-	
+	protected long reloadSegment(long vOffset) {
+		return -1;
+	}
+
 }
