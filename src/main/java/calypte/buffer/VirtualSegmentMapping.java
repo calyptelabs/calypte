@@ -22,6 +22,8 @@ public class VirtualSegmentMapping {
 
 	protected long entryOffset;
 	
+	protected Item item;
+	
 	public VirtualSegmentMapping(ByteArray data, int tableOffset, int itensSize, long size) {
 		this.size        = size;
 		this.tableSize   = size - (itensSize << 5);
@@ -34,6 +36,7 @@ public class VirtualSegmentMapping {
 		this.itens = new List();
 		this.e     = new Entry();
 		this.table = new Table();
+		this.item  = new Item();
 		
 		this.createFreeMap();
 	}
@@ -48,6 +51,10 @@ public class VirtualSegmentMapping {
 		for(int i=0;i<indexSize;i++) {
 			this.free.add(i);
 		}
+	}
+	
+	public Item getItem() {
+		return item;
 	}
 	
 	public long allocSegment(long key) {
@@ -206,6 +213,34 @@ public class VirtualSegmentMapping {
 		
 	}
 	
+	public class Item{
+
+		private static final int VOFFSET_OFFSET     = 16;
+
+		private static final int NEED_UPDATE_OFFSET = 24;
+		
+		public void setVOffset(long index, long value) {
+			long offset = entryOffset + (index << 5) + VOFFSET_OFFSET;
+			data.writeLong(offset, value);
+		}
+		
+		public long getVOffset(long index) {
+			long offset = entryOffset + (index << 5) + VOFFSET_OFFSET;
+			return data.readLong(offset);
+		}
+
+		public void setNeedUpdate(long index, boolean value) {
+			long offset = entryOffset + (index << 5) + NEED_UPDATE_OFFSET;
+			data.writeByte(offset, value? 1 : 0);
+		}
+		
+		public boolean isNeedUpdate(long index) {
+			long offset = entryOffset + (index << 5) + NEED_UPDATE_OFFSET;
+			return data.readByte(offset) != 0;
+		}
+		
+	}
+	
 	public class Entry{
 		
 		private static final int PREVIOUS_OFFSET = 0;
@@ -214,7 +249,7 @@ public class VirtualSegmentMapping {
 
 		private static final int KEY_OFFSET      = 8;
 		
-		private static final int VALUE_OFFSET    = 16;
+		//private static final int VALUE_OFFSET    = 16;
 		
 		public int getNext(long index) {
 			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
@@ -231,11 +266,13 @@ public class VirtualSegmentMapping {
 			return data.readLong(offset);
 		}
 		
+		/*
 		public long getValue(long index) {
 			long offset = entryOffset + (index << 5) + VALUE_OFFSET;
 			return data.readLong(offset);
 		}
-
+		*/
+		
 		public void setNext(long index, int value) {
 			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
 			data.writeInt(offset, value);
@@ -251,10 +288,12 @@ public class VirtualSegmentMapping {
 			data.writeLong(offset, value);
 		}
 		
+		/*
 		public void setValue(long index, long value) {
 			long offset = entryOffset + (index << 5) + VALUE_OFFSET;
 			data.writeLong(offset, value);
 		}
+		*/
 		
 	}
 	
