@@ -1,8 +1,5 @@
 package calypte.buffer;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
-
 public class VirtualSegmentMapping {
 
 	protected ByteArray data;
@@ -25,9 +22,9 @@ public class VirtualSegmentMapping {
 
 	protected long entryOffset;
 	
-	public VirtualSegmentMapping(ByteArray data, int tableOffset, long size) {
+	public VirtualSegmentMapping(ByteArray data, int tableOffset, int itensSize, long size) {
 		this.size        = size;
-		this.tableSize   = new BigDecimal(size).multiply(new BigDecimal(0.1), MathContext.DECIMAL128).longValue();
+		this.tableSize   = size - (itensSize << 5);
 		this.hashMask    = getHashMask(this.tableSize) >> 2;
 		this.tableOffset = tableOffset;
 		this.entryOffset = this.tableSize;
@@ -53,29 +50,18 @@ public class VirtualSegmentMapping {
 		}
 	}
 	
-	public long put(long key, long value) {
-		return table.putEntry(key, value);
+	public long allocSegment(long key) {
+		return table.allocSegment(key);
 	}
 
 	public long get(long key) {
-		return table.getEntry(key);
+		return table.getSegment(key);
 	}
 
 	public boolean remove(long key) {
 		return table.remove(key);
 	}
 	
-	private int getRMSB(int n){ 
-        int position = 1; 
-        int m = 1; 
-  
-        while ((n & m) == 0) { 
-            m = m << 1; 
-            position++; 
-        } 
-        return position; 
-    }
-
 	private int getHashMask(long n){
 		int hm = 0;
 		
@@ -90,7 +76,7 @@ public class VirtualSegmentMapping {
 	
 	public class Table {
 		
-		public long getEntry(long key) {
+		public long getSegment(long key) {
 			int root  = getRootIndex(key);
 			int index = root;
 			
@@ -99,15 +85,15 @@ public class VirtualSegmentMapping {
 			if(index != -1) {
 				itens.remove(index);
 				itens.add(index);
-				return e.getValue(index);
+				//return e.getValue(index);
 			}
 			
-			return -1; 
+			return index; 
 		}
 
-		public long putEntry(long key, long value) {
+		public long allocSegment(long key) {
 			
-			long oldValue = -1;
+			//long oldValue = -1;
 			int root      = getRootIndex(key);
 			int index     = root;
 			
@@ -123,7 +109,7 @@ public class VirtualSegmentMapping {
 					int previous = e.getPrevious(index);
 					int next     = e.getNext(index);
 					long oldKey  = e.getKey(index);
-					oldValue     = e.getValue(index);
+					//oldValue     = e.getValue(index);
 					
 					if(previous == -1) {
 						
@@ -145,7 +131,7 @@ public class VirtualSegmentMapping {
 				}
 				
 				e.setKey(index, key);
-				e.setValue(index, value);
+				//e.setValue(index, value);
 				
 				if(root == -1) {
 					e.setNext(index, -1);
@@ -163,11 +149,12 @@ public class VirtualSegmentMapping {
 				}
 			}
 			else {
-				e.setValue(index, value);
+				//e.setValue(index, value);
 			}
 			
 			itens.add(index);
-			return oldValue;
+			//return oldValue;
+			return index;
 		}
 		
 		public boolean remove(long key) {
