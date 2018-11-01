@@ -95,6 +95,23 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
+			switch (bytes) {
+			case 1:
+				throw new IllegalStateException("bug");
+
+			case 2:
+				return UNSAFE.getByte(data[s], BYTE_ARRAY_OFFSET + o) << 8 | 
+						UNSAFE.getByte(data[s + 1], BYTE_ARRAY_OFFSET);
+
+			case 4:
+				return UNSAFE.getInt(data[s], BYTE_ARRAY_OFFSET + o);
+
+			case 8:
+				return UNSAFE.getLong(data[s], BYTE_ARRAY_OFFSET + o);
+
+			default:
+				throw new IllegalStateException("bytes: " + bytes);
+			}			
 			synchronized(this) {
 				tmpValue[0] = 0L;
 				UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET     , r1);
@@ -103,11 +120,23 @@ public class HeapByteArray implements ByteArray{
 			}
 		}
 		else {
-			synchronized(this) {
-				tmpValue[0] = 0L;
-				UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET, bytes);
-				value = tmpValue[0];
+			switch (bytes) {
+			case 1:
+				return UNSAFE.getByte(data[s], BYTE_ARRAY_OFFSET + o);
+
+			case 2:
+				return UNSAFE.getShort(data[s], BYTE_ARRAY_OFFSET + o);
+
+			case 4:
+				return UNSAFE.getInt(data[s], BYTE_ARRAY_OFFSET + o);
+
+			case 8:
+				return UNSAFE.getLong(data[s], BYTE_ARRAY_OFFSET + o);
+
+			default:
+				throw new IllegalStateException("bytes: " + bytes);
 			}
+			
 		}
 		
 		return value;
@@ -212,9 +241,25 @@ public class HeapByteArray implements ByteArray{
 			}
 		}
 		else {
-			synchronized(this) {
-				tmpValue[0] = value;
-				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET, data[s], BYTE_ARRAY_OFFSET + o, bytes);
+			switch (bytes) {
+			case 1:
+				UNSAFE.putByte(data[s], BYTE_ARRAY_OFFSET + o, (byte)value);
+				break;
+				
+			case 2:
+				UNSAFE.putShort(data[s], BYTE_ARRAY_OFFSET + o, (short)value);
+				break;
+
+			case 4:
+				UNSAFE.putInt(data[s], BYTE_ARRAY_OFFSET + o, (int)value);
+				break;
+
+			case 8:
+				UNSAFE.putLong(data[s], BYTE_ARRAY_OFFSET + o, value);
+				break;
+
+			default:
+				throw new IllegalStateException("bytes: " + bytes);
 			}
 		}
 		
