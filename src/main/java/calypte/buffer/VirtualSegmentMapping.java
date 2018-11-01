@@ -2,6 +2,12 @@ package calypte.buffer;
 
 public class VirtualSegmentMapping {
 
+	private static final long ITEM_TABLE_LENGTH = 1 << 2;
+
+	private static final long ITEM_LENGTH = 1 << 5;
+	
+	private static final long MIN_TABLE_LENGTH = 4 << 2;
+	
 	protected ByteArray data;
 
 	protected Table table;
@@ -25,6 +31,11 @@ public class VirtualSegmentMapping {
 	protected Item item;
 	
 	public VirtualSegmentMapping(ByteArray data, long tableOffset, int itensSize, long size) {
+		
+		if(size < MIN_TABLE_LENGTH + ITEM_LENGTH*itensSize) {
+			throw new IllegalStateException("size < " + (ITEM_LENGTH*itensSize + MIN_TABLE_LENGTH));
+		}
+		
 		this.size        = size;
 		this.tableSize   = size - (itensSize << 5);
 		this.hashMask    = getHashMask(this.tableSize) >> 2;
