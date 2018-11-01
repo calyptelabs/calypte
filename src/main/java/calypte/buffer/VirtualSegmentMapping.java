@@ -49,7 +49,8 @@ public class VirtualSegmentMapping {
 		
 		long indexSize = (size - entryOffset) >> 5;
 		for(int i=0;i<indexSize;i++) {
-			this.free.add(i);
+			free.add(i);
+			item.setVOffset(i, -1);
 		}
 	}
 	

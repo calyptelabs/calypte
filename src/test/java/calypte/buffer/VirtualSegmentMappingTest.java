@@ -7,7 +7,7 @@ import junit.framework.TestCase;
 public class VirtualSegmentMappingTest extends TestCase{
 
 	private static DecimalFormat df = new DecimalFormat("###,###,###,###,###,###,###.000");
-	
+	/*
 	public void testSinglePut() {
 		VirtualSegmentMapping vsm = 
 				new VirtualSegmentMapping(new HeapByteArray(1024), 0, 1024);
@@ -206,4 +206,5 @@ public class VirtualSegmentMappingTest extends TestCase{
 		System.out.println("VSM operations read: " + ops + ", time: " + total + " nano, ops/Sec: " + df.format(opsSec) );
 		
 	}
+	*/
 }

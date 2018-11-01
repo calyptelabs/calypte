@@ -1,5 +1,6 @@
 package calypte.buffer;
 
+import java.io.IOException;
 import java.io.RandomAccessFile;
 
 public interface ByteArray {
@@ -12,9 +13,9 @@ public interface ByteArray {
 
 	byte readByte(long offset);
 	
-	int read(long offset, byte[] buf, int off, int len);
+	int read(long srcOff, byte[] dest, int destOff, int len);
 
-	int read(RandomAccessFile src, long srcOffset, long destOffset, int len);
+	long read(long srcOff, RandomAccessFile dest, long destOff, long len) throws IOException;
 	
 	void writeLong(long offset, long value);
 
@@ -24,9 +25,9 @@ public interface ByteArray {
 
 	void writeByte(long offset, long value);
 	
-	void write(long offset, byte[] buf, int off, int len);
+	void write(byte[] src, int srcOff, long destOff, int len);
 
-	void write(long srcOffset, RandomAccessFile dest, long destOffset, int len);
+	void write(RandomAccessFile src, long srcOff, long destOff, long len) throws IOException;
 	
 	long size();
 	

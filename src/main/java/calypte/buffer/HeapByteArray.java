@@ -1,5 +1,7 @@
 package calypte.buffer;
 
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
 
 import sun.misc.Unsafe;
@@ -111,34 +113,65 @@ public class HeapByteArray implements ByteArray{
 		return value;
 	}
 	
-	public int read(long offset, byte[] buf, int off, int len) {
+	public int read(long srcOff, byte[] dest, int destOff, int len) {
 		
-		if(offset + len > size) {
-			throw new IndexOutOfBoundsException(offset + len + " > " + size);
+		if(srcOff + len > size) {
+			throw new IndexOutOfBoundsException(srcOff + len + " > " + size);
 		}
 		
-		long maxRead = size - offset;
+		long maxRead = size - srcOff;
 		len = (int)(len > maxRead? maxRead : len);
 		
-		int s  = (int)(offset >> 32);
-		long o = offset & 0xFFFFFFFFL;
+		int s  = (int)(srcOff >> 32);
+		long o = srcOff & 0xFFFFFFFFL;
 		
 		long r1 = data[s].length - o;
 		long r2 = len - r1;
 		
 		
 		if(len > r1) {
-			UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, buf, LONG_ARRAY_OFFSET + off     , r1);
-			UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , buf, LONG_ARRAY_OFFSET + off + r1, r2);
+			UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, dest, BYTE_ARRAY_OFFSET + destOff     , r1);
+			UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , dest, BYTE_ARRAY_OFFSET + destOff + r1, r2);
 			return (int)(r1 + r2);
 		}
 		else {
-			UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, buf, LONG_ARRAY_OFFSET + off, len);
-			return (int)r1;
+			UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, dest, BYTE_ARRAY_OFFSET + destOff, len);
+			return (int)len;
 		}
 		
 	}
 
+	public long read(long srcOff, RandomAccessFile dest, long destOff, long len) throws IOException {
+		
+		if(destOff + len > dest.length()) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length());
+		}
+
+		long maxRead = size - srcOff;
+		len = len > maxRead? maxRead : len;
+		long total = len;
+				
+		int s  = (int)(destOff >> 32);
+		long o = destOff & 0xFFFFFFFFL;
+		
+		long copy;
+		long maxSegCopy;
+		
+		while(len > 0) {
+			maxSegCopy = data[s].length - o;
+			copy = maxSegCopy > len? len : maxSegCopy;
+			dest.seek(srcOff);
+			dest.read(data[s], (int)o, (int)copy);
+			
+			len    -= copy;
+			srcOff += copy;
+			o       = 0;
+			s++;
+		}
+		
+		return total;
+	}
+	
 	public void writeLong(long offset, long value) {
 		writeNumber(offset, value, 8);
 	}
@@ -185,33 +218,67 @@ public class HeapByteArray implements ByteArray{
 			}
 		}
 		
-	}	
+	}
 	
-	public void write(long offset, byte[] buf, int off, int len) {
+	public void write(byte[] src, int srcOff, long destOff, int len) {
 		
-		if(offset + len > size) {
-			throw new IndexOutOfBoundsException(offset + len + " > " + size);
+		if(destOff + len > size) {
+			throw new IndexOutOfBoundsException(destOff + len + " > " + size);
 		}
 		
-		long maxRead = size - offset;
+		long maxRead = size - destOff;
 		len = (int)(len > maxRead? maxRead : len);
 		
-		int s  = (int)(offset >> 32);
-		long o = offset & 0xFFFFFFFFL;
+		int s  = (int)(destOff >> 32);
+		long o = destOff & 0xFFFFFFFFL;
 		
 		long r1 = data[s].length - o;
 		long r2 = len - r1;
 		
 		
 		if(len > r1) {
-			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
-			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
+			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
+			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
 		}
 		else {
-			UNSAFE.copyMemory(buf, LONG_ARRAY_OFFSET + off, data[s], BYTE_ARRAY_OFFSET + o, len);
+			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff, data[s], BYTE_ARRAY_OFFSET + o, len);
 		}
 
-		
 	}
+	
+	public void write(RandomAccessFile src, long srcOff, long destOff, long len) throws IOException{
+		
+		if(destOff + len > size) {
+			throw new IndexOutOfBoundsException(destOff + len + " > " + size);
+		}
+
+		long maxSrcBytes = src.length() - srcOff;
+		maxSrcBytes = len > maxSrcBytes? maxSrcBytes : len;
+
+		long maxDestBytes = size - destOff;
+		maxDestBytes = len > maxDestBytes? maxDestBytes : len;
+		
+		len = maxDestBytes > maxSrcBytes? maxSrcBytes : maxDestBytes;
+		
+		int s  = (int)(destOff >> 32);
+		long o = destOff & 0xFFFFFFFFL;
+		
+		long copy;
+		long maxSegCopy;
+		
+		while(len > 0) {
+			maxSegCopy = data[s].length - o;
+			copy = maxSegCopy > len? len : maxSegCopy;
+			src.seek(srcOff);
+			src.read(data[s], (int)o, (int)copy);
+			
+			len    -= copy;
+			srcOff += copy;
+			o       = 0;
+			s++;
+		}
+
+	}
+	
 	
 }

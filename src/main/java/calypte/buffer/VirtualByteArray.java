@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.Field;
+import java.math.BigDecimal;
+import java.math.MathContext;
 
 import calypte.buffer.VirtualSegmentMapping.Item;
 import sun.misc.Unsafe;
@@ -32,24 +34,32 @@ public class VirtualByteArray implements ByteArray{
 	
 	private long size;
 	
-	private ByteArray memory;
+	protected ByteArray memory;
 	
-	private VirtualSegmentMapping segmentMapping;
+	protected VirtualSegmentMapping segmentMapping;
 	
-	private int blockSize;
+	protected int blockSize;
 	
-	private long dataSize;
+	protected long dataSize;
 	
-	private long mappingSize;
+	protected long mappingSize;
 	
-	private int blockSHL;
+	protected int blockSHL;
 	
 	public VirtualByteArray(long bytesMemory, long size, int blockSize, File file) throws IOException {
-		this.blockSHL       = createBlockSHL(blockSize);
+		this.blockSHL       = createBlockSHL(blockSize) - 1;
 		this.blockSize      = 1 << this.blockSHL;
 		this.memory         = this.createByteArray(bytesMemory);
 		this.size           = size;
-		this.dataSize       = bytesMemory/((blockSize + 34)/blockSize);
+		this.dataSize       = 
+				new BigDecimal(bytesMemory)
+					.divide(
+						new BigDecimal(blockSize + 34L)
+							.divide(new BigDecimal(blockSize), MathContext.DECIMAL128),
+						MathContext.DECIMAL128
+					).longValue();
+		
+		//bytesMemory/((blockSize + 34)/blockSize);
 		this.mappingSize    = bytesMemory - this.dataSize;
 		this.segmentMapping = new VirtualSegmentMapping(this.memory, 0, (int)(dataSize/blockSize), mappingSize);
 		
@@ -110,39 +120,70 @@ public class VirtualByteArray implements ByteArray{
 		return val[0];
 	}
 	
-	public int read(RandomAccessFile src, long srcOffset, long destOffset, int len) {
-		return 0;
-	}
-	
-	public int read(long vOffset, byte[] buf, int off, int len) {
-		long maxRead     = size - vOffset;
-		maxRead          = (int)(len > maxRead? maxRead : len);
-		int r            = 0;
+	public long read(long srcOff, RandomAccessFile dest, long destOff, long len) throws IOException{
+
+		if(destOff + len > dest.length()) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length());
+		}
 		
-		long blockRead;
-		long maxBlockRead;
-		long blockOffset;
-		long segment;
+		long maxRead = size - srcOff;
+		len = len > maxRead? maxRead : len;
+		long total = len;
+				
+		long copy;
+		long maxSegCopy;
 		
-		while(maxRead > 0) {
-			blockOffset  = vOffset % blockSize;
-			segment      = vOffset - blockOffset;
-			maxBlockRead = blockSize - blockOffset;
-			blockRead    = maxRead > maxBlockRead? maxBlockRead : maxRead;
+		while(len > 0) {
+			maxSegCopy = blockSize - (destOff % blockSize);
+			copy = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(segment);
-				memory.read(offset, buf, off, (int)blockRead);
+				long offset = getSegment(destOff - (destOff % blockSize));
+				memory.read(srcOff, dest, destOff, (int)copy);
+				
+				Item item = segmentMapping.getItem(); 
+				item.setNeedUpdate(offset >> blockSHL, true);
 			}
 			
-			r       += maxBlockRead;
-			off     += maxBlockRead;
-			vOffset += maxBlockRead;
-			maxRead -= maxBlockRead;
-			
+			len     -= copy;
+			srcOff  += copy;
+			destOff += copy;
 		}
+		
+		return total;	
+	}
+	
+	public int read(long srcOff, byte[] dest, int destOff, int len) {
 
-		return r;
+		if(destOff + len > dest.length) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length);
+		}
+		
+		long maxRead = size - srcOff;
+		len = (int)(len > maxRead? maxRead : len);
+		int total = len;
+		
+		long copy;
+		long maxSegCopy;
+		
+		while(len > 0) {
+			maxSegCopy = blockSize - (destOff % blockSize);
+			copy = maxSegCopy > len? len : maxSegCopy;
+			
+			synchronized(segmentMapping) {
+				long offset = getSegment(destOff - (destOff % blockSize));
+				memory.read(srcOff, dest, destOff, (int)copy);
+				
+				Item item = segmentMapping.getItem(); 
+				item.setNeedUpdate(offset >> blockSHL, true);
+			}
+			
+			len     -= copy;
+			srcOff  += copy;
+			destOff += copy;
+		}
+		
+		return total;
 	}
 
 	public void writeLong(long offset, long value) {
@@ -166,65 +207,61 @@ public class VirtualByteArray implements ByteArray{
 		byte[] dta       = new byte[bytes];
 		
 		UNSAFE.copyMemory(val, LONG_ARRAY_OFFSET, dta, BYTE_ARRAY_OFFSET, bytes);
-		
-		long blockOffset = vOffset % blockSize;
-		long segment     = vOffset - blockOffset;
-		
-		if(blockOffset - bytes < 0) {
-			int r1 = (int)(blockSize - blockOffset);
-			int r2 = bytes - r1;
-
-			synchronized(segmentMapping) {
-				long offset = getSegment(segment);
-				memory.write(offset + blockOffset, dta, 0, r1);
-			}				
-			
-			segment += blockSize;
-			
-			synchronized (segmentMapping) {
-				long offset = getSegment(segment);
-				memory.write(offset, dta, r1, r2);
-			}
-		}
-		else {
-			synchronized(segmentMapping) {
-				long offset = getSegment(segment);
-				memory.write(offset + blockOffset, dta, 0, bytes);
-			}
-		}
-		
+		write(dta, 0, vOffset, bytes);
 	}
 
-	public void write(long srcOffset, RandomAccessFile dest, long destOffset, int len) {
-	}
-	
-	public void write(long vOffset, byte[] buf, int off, int len) {
-		long maxWrite = size - vOffset;
-		maxWrite      = (int)(len > maxWrite? maxWrite : len);
+	public void write(RandomAccessFile src, long srcOff, long destOff, long len) throws IOException{
+
+		if(destOff + len > size) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
+		}
 		
-		long blockWrite;
-		long maxBlockWrite;
-		long blockOffset;
-		long segment;
+		long copy;
+		long maxSegCopy;
 		
-		while(maxWrite > 0) {
-			blockOffset  = vOffset % blockSize;
-			segment      = vOffset - blockOffset;
-			maxBlockWrite = blockSize - blockOffset;
-			blockWrite    = maxWrite > maxBlockWrite? maxBlockWrite : maxWrite;
+		while(len > 0) {
+			maxSegCopy = blockSize - (destOff % blockSize);
+			copy = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(segment);
-				memory.write(offset + blockOffset, buf, off, (int)blockWrite);
+				long offset = getSegment(destOff - (destOff % blockSize));
+				memory.write(src, srcOff, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
 				item.setNeedUpdate(offset >> blockSHL, true);
 			}
 			
-			off     += maxBlockWrite;
-			vOffset += maxBlockWrite;
-			maxWrite -= maxBlockWrite;
+			len     -= copy;
+			srcOff  += copy;
+			destOff += copy;
+		}
+				
+	}
+	
+	public void write(byte[] src, int srcOff, long destOff, int len) {
+
+		if(destOff + len > size) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
+		}
+		
+		long copy;
+		long maxSegCopy;
+		
+		while(len > 0) {
+			maxSegCopy = blockSize - (destOff % blockSize);
+			copy = maxSegCopy > len? len : maxSegCopy;
 			
+			synchronized(segmentMapping) {
+				long offset = getSegment(destOff - (destOff % blockSize));
+				memory.write(src, srcOff, destOff, (int)copy);
+				
+				Item item = segmentMapping.getItem(); 
+				item.setNeedUpdate(offset >> blockSHL, true);
+			}
+			
+			len     -= copy;
+			srcOff  += copy;
+			destOff += copy;
 		}
 		
 	}
@@ -250,28 +287,29 @@ public class VirtualByteArray implements ByteArray{
 		return offset;
 	}
 	
-	private RandomAccessFile file;
+	protected RandomAccessFile file;
 	
 	protected void reloadSegment(long vOffset, long offset, Item item) {
 
 		try {
-			long oldVOffset    = item.getVOffset(offset >> blockSHL);
-			boolean needUpdate = item.isNeedUpdate(offset >> blockSHL);
+			long index         = offset >> blockSHL;
+			long oldVOffset    = item.getVOffset(index);
+			boolean needUpdate = item.isNeedUpdate(index);
 			
 			if(needUpdate && oldVOffset != -1) {
 				if(oldVOffset > file.length()) {
 					file.setLength(oldVOffset + blockSize);
 				}
-				memory.write(offset, file, vOffset, blockSize);
+				memory.read(offset, file, oldVOffset, blockSize);
 			}
 			
 			if(vOffset > file.length()) {
 				file.setLength(vOffset + blockSize);
 			}
 			
-			memory.read(file, vOffset, offset, blockSize);
-			item.setVOffset(offset >> blockSHL, vOffset);
-			item.setNeedUpdate(offset >> blockSHL, false);
+			memory.write(file, vOffset, offset, blockSize);
+			item.setVOffset(index, vOffset);
+			item.setNeedUpdate(index, false);
 		}
 		catch(Throwable e) {
 			throw new IllegalStateException(e);
