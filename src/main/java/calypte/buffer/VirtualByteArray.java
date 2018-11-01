@@ -42,7 +42,11 @@ public class VirtualByteArray implements ByteArray{
 	
 	protected long dataSize;
 	
+	protected long dataOffset;
+	
 	protected long mappingSize;
+	
+	protected long mappingOffset;
 	
 	protected int blockSHL;
 	
@@ -61,7 +65,9 @@ public class VirtualByteArray implements ByteArray{
 		
 		//bytesMemory/((blockSize + 34)/blockSize);
 		this.mappingSize    = bytesMemory - this.dataSize;
-		this.segmentMapping = new VirtualSegmentMapping(this.memory, 0, (int)(dataSize/blockSize), mappingSize);
+		this.mappingOffset  = 0;
+		this.dataOffset     = this.mappingSize;
+		this.segmentMapping = new VirtualSegmentMapping(this.memory, this.mappingOffset, (int)(dataSize/blockSize), mappingSize);
 		
 		file.createNewFile();
 		this.file           = new RandomAccessFile(file, "rw");
@@ -99,20 +105,20 @@ public class VirtualByteArray implements ByteArray{
 
 			synchronized(segmentMapping) {
 				long offset = getSegment(segment);
-				memory.read(offset + blockOffset, dta, 0, r1);
+				memory.read(dataOffset + offset + blockOffset, dta, 0, r1);
 			}				
 			
 			segment += blockSize;
 			
 			synchronized (segmentMapping) {
 				long offset = getSegment(segment);
-				memory.read(offset, dta, r1, r2);
+				memory.read(dataOffset + offset, dta, r1, r2);
 			}
 		}
 		else {
 			synchronized(segmentMapping) {
 				long offset = getSegment(segment);
-				memory.read(offset, dta, 0, bytes);
+				memory.read(dataOffset + offset, dta, 0, bytes);
 			}
 		}
 		
@@ -139,7 +145,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			synchronized(segmentMapping) {
 				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.read(srcOff, dest, destOff, (int)copy);
+				memory.read(dataOffset + srcOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
 				item.setNeedUpdate(offset >> blockSHL, true);
@@ -172,7 +178,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			synchronized(segmentMapping) {
 				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.read(srcOff, dest, destOff, (int)copy);
+				memory.read(dataOffset + srcOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
 				item.setNeedUpdate(offset >> blockSHL, true);
@@ -225,7 +231,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			synchronized(segmentMapping) {
 				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.write(src, srcOff, destOff, (int)copy);
+				memory.write(src, srcOff, dataOffset + destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
 				item.setNeedUpdate(offset >> blockSHL, true);
@@ -253,7 +259,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			synchronized(segmentMapping) {
 				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.write(src, srcOff, destOff, (int)copy);
+				memory.write(src, srcOff, dataOffset + destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
 				item.setNeedUpdate(offset >> blockSHL, true);
@@ -300,14 +306,17 @@ public class VirtualByteArray implements ByteArray{
 				if(oldVOffset > file.length()) {
 					file.setLength(oldVOffset + blockSize);
 				}
-				memory.read(offset, file, oldVOffset, blockSize);
+				memory.read(offset + dataOffset, file, oldVOffset, blockSize);
 			}
 			
-			if(vOffset > file.length()) {
-				file.setLength(vOffset + blockSize);
+			if(vOffset < file.length()) {
+				//if(vOffset > file.length()) {
+				//	file.setLength(vOffset + blockSize);
+				//}
+				
+				memory.write(file, vOffset, offset + dataOffset, blockSize);
 			}
 			
-			memory.write(file, vOffset, offset, blockSize);
 			item.setVOffset(index, vOffset);
 			item.setNeedUpdate(index, false);
 		}

@@ -24,7 +24,7 @@ public class VirtualSegmentMapping {
 	
 	protected Item item;
 	
-	public VirtualSegmentMapping(ByteArray data, int tableOffset, int itensSize, long size) {
+	public VirtualSegmentMapping(ByteArray data, long tableOffset, int itensSize, long size) {
 		this.size        = size;
 		this.tableSize   = size - (itensSize << 5);
 		this.hashMask    = getHashMask(this.tableSize) >> 2;
