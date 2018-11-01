@@ -112,8 +112,8 @@ public class HeapByteArray implements ByteArray{
 
 			case 8:
 				return 
-					(UNSAFE.getInt(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 8) << ((8 - r1) << 3) |
-					UNSAFE.getInt(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((8 - r2) << 3)) & 0xffffffffffffffffL;
+					(UNSAFE.getLong(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 8) << ((8 - r1) << 3) |
+					UNSAFE.getLong(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((8 - r2) << 3)) & 0xffffffffffffffffL;
 
 			default:
 				throw new IllegalStateException("bytes: " + bytes);
