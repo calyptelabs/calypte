@@ -28,8 +28,6 @@ public class HeapByteArray implements ByteArray{
         }
     }
 	
-    private final long[] tmpValue;
-    
 	private byte[][] data;
 
 	private long size;
@@ -39,6 +37,11 @@ public class HeapByteArray implements ByteArray{
 	}
 	
 	public HeapByteArray(long size, int block) {
+		
+		if(block < 8) {
+			throw new IllegalStateException("block < 8");
+		}
+		
 		this.size   = size;
 		int segs = (int) (size/block);
 		segs     += size % block != 0? 1 : 0;
@@ -49,11 +52,10 @@ public class HeapByteArray implements ByteArray{
 		
 		while(size > 0) {
 			int len = (int) (size > block? block : size);
-			data[seg++] = new byte[len];
+			data[seg++] = new byte[len < 8? 8 : len]; // último bloco tem que ter no mínimo 8 bytes 
 			size -= len;
 		}
 		
-		this.tmpValue = new long[1];
 	}
 	
 	public long size() {
@@ -77,7 +79,6 @@ public class HeapByteArray implements ByteArray{
 	}
 	
 	private long readNumber(long offset, int bytes) {
-		long value = 0;
 		int len    = bytes;
 		
 		if(offset + bytes > size) {
@@ -100,24 +101,23 @@ public class HeapByteArray implements ByteArray{
 				throw new IllegalStateException("bug");
 
 			case 2:
-				return UNSAFE.getByte(data[s], BYTE_ARRAY_OFFSET + o) << 8 | 
-						UNSAFE.getByte(data[s + 1], BYTE_ARRAY_OFFSET);
+				return 
+					(UNSAFE.getByte(data[s    ], BYTE_ARRAY_OFFSET + o) << 8 | 
+					UNSAFE.getByte(data[s + 1], BYTE_ARRAY_OFFSET    )) & 0xffff;
 
 			case 4:
-				return UNSAFE.getInt(data[s], BYTE_ARRAY_OFFSET + o);
+				return 
+					(UNSAFE.getInt(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 4) << ((4 - r1) << 3) |
+					UNSAFE.getInt(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((4 - r2) << 3)) & 0xffffffff;
 
 			case 8:
-				return UNSAFE.getLong(data[s], BYTE_ARRAY_OFFSET + o);
+				return 
+					(UNSAFE.getInt(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 8) << ((8 - r1) << 3) |
+					UNSAFE.getInt(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((8 - r2) << 3)) & 0xffffffffffffffffL;
 
 			default:
 				throw new IllegalStateException("bytes: " + bytes);
 			}			
-			synchronized(this) {
-				tmpValue[0] = 0L;
-				UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, tmpValue, LONG_ARRAY_OFFSET     , r1);
-				UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , tmpValue, LONG_ARRAY_OFFSET + r1, r2);
-				value = tmpValue[0];
-			}
 		}
 		else {
 			switch (bytes) {
@@ -139,35 +139,43 @@ public class HeapByteArray implements ByteArray{
 			
 		}
 		
-		return value;
 	}
 	
 	public int read(long srcOff, byte[] dest, int destOff, int len) {
 		
-		if(srcOff + len > size) {
-			throw new IndexOutOfBoundsException(srcOff + len + " > " + size);
+		if(destOff + len > dest.length) {
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length);
 		}
-		
+
 		long maxRead = size - srcOff;
 		len = (int)(len > maxRead? maxRead : len);
+		long total = len;
+				
+		int seg  = (int)(srcOff >> 32);
+		long off = srcOff & 0xFFFFFFFFL;
 		
-		int s  = (int)(srcOff >> 32);
-		long o = srcOff & 0xFFFFFFFFL;
+		long maxSegCopy = data[seg].length - off;
+		long copy       = maxSegCopy > len? len : maxSegCopy;
+		UNSAFE.copyMemory(data[seg], BYTE_ARRAY_OFFSET + off, dest, BYTE_ARRAY_OFFSET + destOff, copy);
+
+		len -= copy;
+		off  = 0;
 		
-		long r1 = data[s].length - o;
-		long r2 = len - r1;
-		
-		
-		if(len > r1) {
-			UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, dest, BYTE_ARRAY_OFFSET + destOff     , r1);
-			UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , dest, BYTE_ARRAY_OFFSET + destOff + r1, r2);
-			return (int)(r1 + r2);
+		while(len > 0) {
+			
+			destOff += copy;
+			seg++;
+			
+			maxSegCopy = data[seg].length - off;
+			copy       = maxSegCopy > len? len : maxSegCopy;
+			
+			UNSAFE.copyMemory(data[seg], BYTE_ARRAY_OFFSET + off, dest, BYTE_ARRAY_OFFSET + destOff, copy);
+			
+			len -= copy;
+			
 		}
-		else {
-			UNSAFE.copyMemory(data[s], BYTE_ARRAY_OFFSET + o, dest, BYTE_ARRAY_OFFSET + destOff, len);
-			return (int)len;
-		}
 		
+		return (int)total;
 	}
 
 	public long read(long srcOff, RandomAccessFile dest, long destOff, long len) throws IOException {
@@ -177,28 +185,37 @@ public class HeapByteArray implements ByteArray{
 		}
 
 		long maxRead = size - srcOff;
-		len = len > maxRead? maxRead : len;
+		len = (int)(len > maxRead? maxRead : len);
 		long total = len;
 				
-		int s  = (int)(destOff >> 32);
-		long o = destOff & 0xFFFFFFFFL;
+		int seg  = (int)(srcOff >> 32);
+		long off = srcOff & 0xFFFFFFFFL;
 		
-		long copy;
-		long maxSegCopy;
+		long maxSegCopy = data[seg].length - off;
+		long copy       = maxSegCopy > len? len : maxSegCopy;
+		dest.seek(destOff);
+		dest.write(data[seg], (int)off, (int)copy);
+
+		len -= copy;
+		off  = 0;
 		
 		while(len > 0) {
-			maxSegCopy = data[s].length - o;
-			copy = maxSegCopy > len? len : maxSegCopy;
-			dest.seek(srcOff);
-			dest.read(data[s], (int)o, (int)copy);
 			
-			len    -= copy;
-			srcOff += copy;
-			o       = 0;
-			s++;
+			destOff += copy;
+			seg++;
+			
+			maxSegCopy = data[seg].length - off;
+			copy       = maxSegCopy > len? len : maxSegCopy;
+			
+			dest.seek(destOff);
+			dest.write(data[seg], (int)off, (int)copy);
+			
+			len -= copy;
+			
 		}
 		
 		return total;
+
 	}
 	
 	public void writeLong(long offset, long value) {
@@ -234,11 +251,9 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
-			synchronized(this) {
-				tmpValue[0] = value;
-				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
-				UNSAFE.copyMemory(tmpValue, LONG_ARRAY_OFFSET + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
-			}
+			long[] v = new long[] {value};
+			UNSAFE.copyMemory(v, LONG_ARRAY_OFFSET     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
+			UNSAFE.copyMemory(v, LONG_ARRAY_OFFSET + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
 		}
 		else {
 			switch (bytes) {
@@ -268,25 +283,35 @@ public class HeapByteArray implements ByteArray{
 	public void write(byte[] src, int srcOff, long destOff, int len) {
 		
 		if(destOff + len > size) {
-			throw new IndexOutOfBoundsException(destOff + len + " > " + size);
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
-		
-		long maxRead = size - destOff;
+
+		long maxRead = src.length - srcOff;
 		len = (int)(len > maxRead? maxRead : len);
+				
+		int seg  = (int)(destOff >> 32);
+		long off = destOff & 0xFFFFFFFFL;
 		
-		int s  = (int)(destOff >> 32);
-		long o = destOff & 0xFFFFFFFFL;
+		long maxSegCopy = data[seg].length - off;
+		long copy       = maxSegCopy > len? len : maxSegCopy;
+
+		UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff, data[seg], BYTE_ARRAY_OFFSET + off, copy);
 		
-		long r1 = data[s].length - o;
-		long r2 = len - r1;
+		len -= copy;
+		off = 0;
 		
-		
-		if(len > r1) {
-			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff     , data[s    ], BYTE_ARRAY_OFFSET + o, r1);
-			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff + r1, data[s + 1], BYTE_ARRAY_OFFSET    , r2);
-		}
-		else {
-			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff, data[s], BYTE_ARRAY_OFFSET + o, len);
+		while(len > 0) {
+			
+			srcOff += copy;
+			seg++;
+			
+			maxSegCopy = data[seg].length - off;
+			copy = maxSegCopy > len? len : maxSegCopy;
+			
+			UNSAFE.copyMemory(src, BYTE_ARRAY_OFFSET + srcOff, data[seg], BYTE_ARRAY_OFFSET + off, copy);
+			
+			len -= copy;
+			
 		}
 
 	}
@@ -294,33 +319,37 @@ public class HeapByteArray implements ByteArray{
 	public void write(RandomAccessFile src, long srcOff, long destOff, long len) throws IOException{
 		
 		if(destOff + len > size) {
-			throw new IndexOutOfBoundsException(destOff + len + " > " + size);
+			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
 
-		long maxSrcBytes = src.length() - srcOff;
-		maxSrcBytes = len > maxSrcBytes? maxSrcBytes : len;
+		long maxRead = src.length() - srcOff;
+		len = (int)(len > maxRead? maxRead : len);
+				
+		int seg  = (int)(destOff >> 32);
+		long off = destOff & 0xFFFFFFFFL;
+		
+		long maxSegCopy = data[seg].length - off;
+		long copy       = maxSegCopy > len? len : maxSegCopy;
 
-		long maxDestBytes = size - destOff;
-		maxDestBytes = len > maxDestBytes? maxDestBytes : len;
+		src.seek(srcOff);
+		src.read(data[seg], (int)off, (int)copy);
 		
-		len = maxDestBytes > maxSrcBytes? maxSrcBytes : maxDestBytes;
-		
-		int s  = (int)(destOff >> 32);
-		long o = destOff & 0xFFFFFFFFL;
-		
-		long copy;
-		long maxSegCopy;
+		len -= copy;
+		off = 0;
 		
 		while(len > 0) {
-			maxSegCopy = data[s].length - o;
-			copy = maxSegCopy > len? len : maxSegCopy;
-			src.seek(srcOff);
-			src.read(data[s], (int)o, (int)copy);
 			
-			len    -= copy;
 			srcOff += copy;
-			o       = 0;
-			s++;
+			seg++;
+			
+			maxSegCopy = data[seg].length - off;
+			copy = maxSegCopy > len? len : maxSegCopy;
+			
+			src.seek(srcOff);
+			src.read(data[seg], (int)off, (int)copy);
+			
+			len -= copy;
+			
 		}
 
 	}
