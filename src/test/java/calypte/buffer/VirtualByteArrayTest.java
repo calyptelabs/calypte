@@ -109,6 +109,26 @@ public class VirtualByteArrayTest extends TestCase{
 		
 	}
 
+	public void testWriteLastBytesBufferMemeory() throws IOException {
+
+		long vOff    = (array.dataSize - array.dataOffset) - 1024;
+		int bufSize  = 1024;
+
+		Random r = new Random();
+		
+		byte[] data = new byte[bufSize];
+		byte[] val  = new byte[bufSize];
+
+		r.nextBytes(data);
+
+		array.write(data, 0, vOff, data.length);
+
+		assertEquals(0, array.file.length());
+		array.memory.read(array.dataOffset + vOff, val, 0, val.length);
+		assertArrayEquals(data, val);
+		
+	}
+	
 	public void testOverrideFirstSegment() throws IOException {
 
 		long segs    = array.dataSize >> array.blockSHL;

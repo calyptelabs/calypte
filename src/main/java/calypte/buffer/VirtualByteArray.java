@@ -67,7 +67,13 @@ public class VirtualByteArray implements ByteArray{
 		this.mappingSize    = bytesMemory - this.dataSize;
 		this.mappingOffset  = 0;
 		this.dataOffset     = this.mappingSize;
-		this.segmentMapping = new VirtualSegmentMapping(this.memory, this.mappingOffset, (int)(dataSize/blockSize), mappingSize);
+		this.segmentMapping = 
+				new VirtualSegmentMapping(
+					this.memory, 
+					this.mappingOffset, 
+					(int)(dataSize/blockSize + (dataSize % blockSize != 0? 1 : 0)), 
+					mappingSize
+				);
 		
 		file.createNewFile();
 		this.file           = new RandomAccessFile(file, "rw");
