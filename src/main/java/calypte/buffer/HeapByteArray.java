@@ -96,28 +96,10 @@ public class HeapByteArray implements ByteArray{
 		
 		
 		if(len > r1) {
-			switch (bytes) {
-			case 1:
-				throw new IllegalStateException("bug");
-
-			case 2:
-				return 
-					(UNSAFE.getByte(data[s    ], BYTE_ARRAY_OFFSET + o) << 8 | 
-					UNSAFE.getByte(data[s + 1], BYTE_ARRAY_OFFSET    )) & 0xffff;
-
-			case 4:
-				return 
-					(UNSAFE.getInt(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 4) << ((4 - r1) << 3) |
-					UNSAFE.getInt(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((4 - r2) << 3)) & 0xffffffff;
-
-			case 8:
-				return 
-					(UNSAFE.getLong(data[s    ], BYTE_ARRAY_OFFSET + data[s].length - 8) << ((8 - r1) << 3) |
-					UNSAFE.getLong(data[s + 1], BYTE_ARRAY_OFFSET                     ) >> ((8 - r2) << 3)) & 0xffffffffffffffffL;
-
-			default:
-				throw new IllegalStateException("bytes: " + bytes);
-			}			
+			long[] b = new long[1];
+			UNSAFE.copyMemory(data[s    ], BYTE_ARRAY_OFFSET + o, b, LONG_ARRAY_OFFSET     , r1);
+			UNSAFE.copyMemory(data[s + 1], BYTE_ARRAY_OFFSET    , b, LONG_ARRAY_OFFSET + r1, r2);
+			return b[0];
 		}
 		else {
 			switch (bytes) {
