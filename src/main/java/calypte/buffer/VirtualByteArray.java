@@ -328,10 +328,6 @@ public class VirtualByteArray implements ByteArray{
 			}
 			
 			if(vOffset < file.length()) {
-				//if(vOffset > file.length()) {
-				//	file.setLength(vOffset + blockSize);
-				//}
-				
 				memory.write(file, vOffset, dataOffset + offset, blockSize);
 			}
 			
