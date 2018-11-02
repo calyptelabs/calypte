@@ -132,31 +132,36 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length());
 		}
 		
-		long maxRead = size - srcOff;
-		len = len > maxRead? maxRead : len;
-		long total = len;
-				
+		long vOff = srcOff % blockSize;
+		long vSeg = srcOff - vOff;
+		
+		long maxCopy = size - srcOff;
+		maxCopy = len > maxCopy? maxCopy : len;
+		
+		len = (int)maxCopy;
+		
 		long copy;
 		long maxSegCopy;
 		
 		while(len > 0) {
-			maxSegCopy = blockSize - (destOff % blockSize);
-			copy = maxSegCopy > len? len : maxSegCopy;
+			maxSegCopy = blockSize - vOff;
+			copy       = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.read(dataOffset + srcOff, dest, destOff, (int)copy);
+				long offsetSeg = getSegment(vSeg);
+				memory.read(dataOffset + offsetSeg + vOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offset >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockSHL, true);
 			}
 			
 			len     -= copy;
 			srcOff  += copy;
-			destOff += copy;
+			vOff     = 0;
+			vSeg++;
 		}
 		
-		return total;	
+		return maxCopy;
 	}
 	
 	public int read(long srcOff, byte[] dest, int destOff, int len) {
@@ -165,31 +170,36 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length);
 		}
 		
-		long maxRead = size - srcOff;
-		len = (int)(len > maxRead? maxRead : len);
-		int total = len;
+		long vOff = srcOff % blockSize;
+		long vSeg = srcOff - vOff;
+		
+		long maxCopy = size - srcOff;
+		maxCopy = len > maxCopy? maxCopy : len;
+		
+		len = (int)maxCopy;
 		
 		long copy;
 		long maxSegCopy;
 		
 		while(len > 0) {
-			maxSegCopy = blockSize - (destOff % blockSize);
-			copy = maxSegCopy > len? len : maxSegCopy;
+			maxSegCopy = blockSize - vOff;
+			copy       = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.read(dataOffset + srcOff, dest, destOff, (int)copy);
+				long offsetSeg = getSegment(vSeg);
+				memory.read(dataOffset + offsetSeg + vOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offset >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockSHL, true);
 			}
 			
 			len     -= copy;
 			srcOff  += copy;
-			destOff += copy;
+			vOff     = 0;
+			vSeg++;
 		}
 		
-		return total;
+		return (int)maxCopy;
 	}
 
 	public void writeLong(long offset, long value) {
@@ -222,26 +232,30 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
 		
+		long vOff = destOff % blockSize;
+		long vSeg = destOff - vOff
+				;
 		long copy;
 		long maxSegCopy;
 		
 		while(len > 0) {
-			maxSegCopy = blockSize - (destOff % blockSize);
-			copy = maxSegCopy > len? len : maxSegCopy;
+			maxSegCopy = blockSize - vOff;
+			copy       = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.write(src, srcOff, dataOffset + destOff, (int)copy);
+				long offsetSeg = getSegment(vSeg);
+				memory.write(src, srcOff, dataOffset + offsetSeg + vOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offset >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockSHL, true);
 			}
 			
 			len     -= copy;
 			srcOff  += copy;
-			destOff += copy;
-		}
-				
+			vOff     = 0;
+			vSeg++;
+		}				
+		
 	}
 	
 	public void write(byte[] src, int srcOff, long destOff, int len) {
@@ -250,24 +264,28 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
 		
+		long vOff = destOff % blockSize;
+		long vSeg = destOff - vOff
+				;
 		long copy;
 		long maxSegCopy;
 		
 		while(len > 0) {
-			maxSegCopy = blockSize - (destOff % blockSize);
-			copy = maxSegCopy > len? len : maxSegCopy;
+			maxSegCopy = blockSize - vOff;
+			copy       = maxSegCopy > len? len : maxSegCopy;
 			
 			synchronized(segmentMapping) {
-				long offset = getSegment(destOff - (destOff % blockSize));
-				memory.write(src, srcOff, dataOffset + destOff, (int)copy);
+				long offsetSeg = getSegment(vSeg);
+				memory.write(src, srcOff, dataOffset + offsetSeg + vOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offset >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockSHL, true);
 			}
 			
 			len     -= copy;
 			srcOff  += copy;
-			destOff += copy;
+			vOff     = 0;
+			vSeg++;
 		}
 		
 	}
@@ -303,10 +321,10 @@ public class VirtualByteArray implements ByteArray{
 			boolean needUpdate = item.isNeedUpdate(index);
 			
 			if(needUpdate && oldVOffset != -1) {
-				if(oldVOffset > file.length()) {
+				if(oldVOffset + blockSize > file.length()) {
 					file.setLength(oldVOffset + blockSize);
 				}
-				memory.read(offset + dataOffset, file, oldVOffset, blockSize);
+				memory.read(dataOffset + offset, file, oldVOffset, blockSize);
 			}
 			
 			if(vOffset < file.length()) {
@@ -314,7 +332,7 @@ public class VirtualByteArray implements ByteArray{
 				//	file.setLength(vOffset + blockSize);
 				//}
 				
-				memory.write(file, vOffset, offset + dataOffset, blockSize);
+				memory.write(file, vOffset, dataOffset + offset, blockSize);
 			}
 			
 			item.setVOffset(index, vOffset);

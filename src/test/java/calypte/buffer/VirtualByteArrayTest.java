@@ -24,7 +24,7 @@ public class VirtualByteArrayTest extends TestCase{
 		assertEquals(0, array.file.length());
 		
 		byte[] tmp = new byte[5];
-		array.memory.read(0, tmp, 0, 5);
+		array.memory.read(array.dataOffset, tmp, 0, 5);
 		assertEquals("TESTE", new String(tmp));
 	}
 	
