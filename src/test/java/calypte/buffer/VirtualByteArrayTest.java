@@ -4,7 +4,6 @@ import static org.junit.Assert.assertArrayEquals;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.TestCase;
@@ -31,7 +30,7 @@ public class VirtualByteArrayTest extends TestCase{
 	}
 	
 	public void testWriteTwoBlocks() throws IOException {
-		int blockSize = 1 << array.blockSHL;
+		int blockSize = 1 << array.blockBitDesc;
 		int arraylen  = blockSize << 1; 
 		
 		byte[] val  = new byte[arraylen];
@@ -50,8 +49,8 @@ public class VirtualByteArrayTest extends TestCase{
 
 	public void testWriteWithoutLastSegment() throws IOException {
 
-		int maxSegs   = (int)(array.dataSize >> array.blockSHL);
-		int blockSize = 1 << array.blockSHL;
+		int maxSegs   = (int)(array.dataSize >> array.blockBitDesc);
+		int blockSize = 1 << array.blockBitDesc;
 		int arraylen  = blockSize*(maxSegs - 1);
 		
 		byte[] val  = new byte[arraylen];
@@ -71,8 +70,8 @@ public class VirtualByteArrayTest extends TestCase{
 
 	public void testWriteAllsSegments() throws IOException {
 
-		int maxSegs   = (int)(array.dataSize >> array.blockSHL);
-		int blockSize = 1 << array.blockSHL;
+		int maxSegs   = (int)(array.dataSize >> array.blockBitDesc);
+		int blockSize = 1 << array.blockBitDesc;
 		int arraylen  = blockSize*maxSegs;
 		
 		byte[] val  = new byte[arraylen];
@@ -109,10 +108,10 @@ public class VirtualByteArrayTest extends TestCase{
 		
 	}
 
-	public void testWriteLastBytesBufferMemeory() throws IOException {
+	public void testWriteLastBytesMemoryBuffer() throws IOException {
 
-		long vOff    = (array.dataSize - array.dataOffset) - 1024;
-		int bufSize  = 1024;
+		int bufSize  = 1 << array.blockBitDesc;
+		long vOff    = array.dataSize - bufSize;
 
 		Random r = new Random();
 		
@@ -124,45 +123,31 @@ public class VirtualByteArrayTest extends TestCase{
 		array.write(data, 0, vOff, data.length);
 
 		assertEquals(0, array.file.length());
-		array.memory.read(array.dataOffset + vOff, val, 0, val.length);
+		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(data, val);
 		
 	}
 	
 	public void testOverrideFirstSegment() throws IOException {
-
-		long segs    = array.dataSize >> array.blockSHL;
-		int segSize  = 1 << array.blockSHL;
-
 		Random r = new Random();
 		
-		byte[] diff = new byte[segSize];
-		byte[] data = new byte[segSize];
+		byte[] diff = new byte[1 << array.blockBitDesc];
+		byte[] data = new byte[(int)array.dataSize];
+		byte[] val  = new byte[(int)array.dataSize];
 
 		r.nextBytes(diff);
 		r.nextBytes(data);
 
-		long off = 0;
-		
-		for(int i=0;i<segs;i++) {
-			array.write(data, 0, off, data.length);
-			off += segSize;
-		}
+		array.write(data, 0, 0, data.length);
+		array.write(diff, 0, data.length, diff.length);
 
-		array.write(diff, 0, off, diff.length);
+		System.arraycopy(diff, 0, data, 0, diff.length);
+		
+		array.memory.read(array.dataOffset, val, 0, val.length);
 		
 		assertEquals(1024, array.file.length());
-
 		
-		off = 0;
-		byte[] val = new byte[segSize];
-		
-		for(int i=0;i<segs;i++) {
-			array.memory.read(array.dataOffset + off, val, 0, val.length);
-			assertTrue(Arrays.equals(val, data));
-			off += segSize;
-		}
-		
+		assertArrayEquals(data, val);
 		
 	}
 	

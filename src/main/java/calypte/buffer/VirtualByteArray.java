@@ -48,11 +48,14 @@ public class VirtualByteArray implements ByteArray{
 	
 	protected long mappingOffset;
 	
-	protected int blockSHL;
+	protected int blockBitDesc;
+	
+	protected int blockMask;
 	
 	public VirtualByteArray(long bytesMemory, long size, int blockSize, File file) throws IOException {
-		this.blockSHL       = createBlockSHL(blockSize) - 1;
-		this.blockSize      = 1 << this.blockSHL;
+		this.blockBitDesc       = createBlockSHL(blockSize) - 1;
+		this.blockSize      = 1 << this.blockBitDesc;
+		this.blockMask      = this.blockSize - 1;
 		this.memory         = this.createByteArray(bytesMemory);
 		this.size           = size;
 		this.dataSize       = 
@@ -138,8 +141,8 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length());
 		}
 		
-		long vOff = srcOff % blockSize;
-		long vSeg = srcOff - vOff;
+		long vOff = destOff & blockMask;
+		long vSeg = destOff >> blockBitDesc;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -158,7 +161,7 @@ public class VirtualByteArray implements ByteArray{
 				memory.read(dataOffset + offsetSeg + vOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offsetSeg >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockBitDesc, true);
 			}
 			
 			len     -= copy;
@@ -176,8 +179,8 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length);
 		}
 		
-		long vOff = srcOff % blockSize;
-		long vSeg = srcOff - vOff;
+		long vOff = destOff & blockMask;
+		long vSeg = destOff >> blockBitDesc;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -196,7 +199,7 @@ public class VirtualByteArray implements ByteArray{
 				memory.read(dataOffset + offsetSeg + vOff, dest, destOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offsetSeg >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockBitDesc, true);
 			}
 			
 			len     -= copy;
@@ -238,8 +241,8 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
 		
-		long vOff = destOff % blockSize;
-		long vSeg = destOff - vOff
+		long vOff = destOff & blockMask;
+		long vSeg = destOff >> blockBitDesc;
 				;
 		long copy;
 		long maxSegCopy;
@@ -253,7 +256,7 @@ public class VirtualByteArray implements ByteArray{
 				memory.write(src, srcOff, dataOffset + offsetSeg + vOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offsetSeg >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockBitDesc, true);
 			}
 			
 			len     -= copy;
@@ -270,9 +273,9 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + size);
 		}
 		
-		long vOff = destOff % blockSize;
-		long vSeg = destOff - vOff
-				;
+		long vOff = destOff & blockMask;
+		long vSeg = destOff >> blockBitDesc;
+
 		long copy;
 		long maxSegCopy;
 		
@@ -285,7 +288,7 @@ public class VirtualByteArray implements ByteArray{
 				memory.write(src, srcOff, dataOffset + offsetSeg + vOff, (int)copy);
 				
 				Item item = segmentMapping.getItem(); 
-				item.setNeedUpdate(offsetSeg >> blockSHL, true);
+				item.setNeedUpdate(offsetSeg >> blockBitDesc, true);
 			}
 			
 			len     -= copy;
@@ -307,11 +310,11 @@ public class VirtualByteArray implements ByteArray{
 		if(offset == -1) {
 			offset     = segmentMapping.allocSegment(vOffset);
 			Item item  = segmentMapping.getItem(); 
-			offset     = offset << blockSHL;
+			offset     = offset << blockBitDesc;
 			reloadSegment(vOffset, offset, item);
 		}
 		else {
-			offset = offset << blockSHL;
+			offset = offset << blockBitDesc;
 		}
 		
 		return offset;
@@ -322,7 +325,7 @@ public class VirtualByteArray implements ByteArray{
 	protected void reloadSegment(long vOffset, long offset, Item item) {
 
 		try {
-			long index         = offset >> blockSHL;
+			long index         = offset >> blockBitDesc;
 			long oldVOffset    = item.getVOffset(index);
 			boolean needUpdate = item.isNeedUpdate(index);
 			
