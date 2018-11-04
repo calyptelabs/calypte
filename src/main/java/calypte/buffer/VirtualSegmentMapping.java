@@ -2,11 +2,11 @@ package calypte.buffer;
 
 public class VirtualSegmentMapping {
 
-	private static final long ITEM_TABLE_LENGTH = 1 << 2;
+	public static final long ITEM_TABLE_LENGTH = 1 << 2;
 
-	private static final long ITEM_LENGTH = 1 << 5;
+	public static final long ITEM_LENGTH = 1 << 5;
 	
-	private static final long MIN_TABLE_LENGTH = 4 << 2;
+	public static final long MIN_TABLE_LENGTH = 4 << 2;
 	
 	protected ByteArray data;
 

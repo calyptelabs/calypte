@@ -53,35 +53,67 @@ public class VirtualByteArray implements ByteArray{
 	protected int blockMask;
 	
 	public VirtualByteArray(long bytesMemory, long size, int blockSize, File file) throws IOException {
-		this.blockBitDesc       = createBlockSHL(blockSize) - 1;
+		
+		this.size           = size;
+		
+		//calcula o tamanho do bloco de dados
+		this.blockBitDesc   = createBitDesloc(blockSize) - 1;
 		this.blockSize      = 1 << this.blockBitDesc;
 		this.blockMask      = this.blockSize - 1;
-		this.memory         = this.createByteArray(bytesMemory);
-		this.size           = size;
-		this.dataSize       = 
-				new BigDecimal(bytesMemory)
-					.divide(
-						new BigDecimal(blockSize + 34L)
-							.divide(new BigDecimal(blockSize), MathContext.DECIMAL128),
-						MathContext.DECIMAL128
-					).longValue();
+
+		//Calcula o tamanho da região que será usada para armazenar os dados.
+		this.dataSize       = this.calculateDataSize(bytesMemory, blockSize);
 		
-		//bytesMemory/((blockSize + 34)/blockSize);
+		//Calcula o tamanho da região que será usada para armazenar as informações de mapeamento.
 		this.mappingSize    = bytesMemory - this.dataSize;
-		this.mappingOffset  = 0;
-		this.dataOffset     = this.mappingSize;
-		this.segmentMapping = 
-				new VirtualSegmentMapping(
-					this.memory, 
-					this.mappingOffset, 
-					(int)(dataSize/blockSize + (dataSize % blockSize != 0? 1 : 0)), 
-					mappingSize
-				);
 		
+		//Define o offset das informações de mapeamento.
+		this.mappingOffset  = 0;
+		
+		//Define o offset dos dados.
+		this.dataOffset     = this.mappingSize;
+		
+		//Cria o buffer usado para armazenar o mapeamento e os dados
+		this.memory         = this.createByteArray(bytesMemory);
+
+		//Cria o mapeamento dos segmentos.
+		this.segmentMapping = this.createVirtualSegmentMapping();
+		
+		//Cria o arquivo de dump dos segmentos.
 		file.createNewFile();
-		this.file           = new RandomAccessFile(file, "rw");
+		this.file = new RandomAccessFile(file, "rw");
 	}
 
+	private VirtualSegmentMapping createVirtualSegmentMapping() {
+		return
+		new VirtualSegmentMapping(
+				memory, 
+				mappingOffset, 
+				(int)(dataSize/blockSize), 
+				mappingSize
+			);
+	}
+	
+	private long calculateDataSize(long total, long blockSize) {
+		
+		BigDecimal maxBlockUsage = 
+			new BigDecimal(
+				blockSize + 
+				VirtualSegmentMapping.ITEM_LENGTH + 
+				(VirtualSegmentMapping.ITEM_TABLE_LENGTH >> 1)
+			);
+		
+		BigDecimal blockUsage = new BigDecimal(blockSize);
+				
+		BigDecimal dataUsage = 
+			new BigDecimal(total)
+				.divide(
+					maxBlockUsage.divide(blockUsage, MathContext.DECIMAL128)
+				, MathContext.DECIMAL128);
+		
+		return dataUsage.longValue();
+	}
+	
 	protected ByteArray createByteArray(long bytesMemory) {
 		return new HeapByteArray(bytesMemory);
 	}
@@ -349,7 +381,7 @@ public class VirtualByteArray implements ByteArray{
 		
 	}
 
-	private int createBlockSHL(long value) {
+	private int createBitDesloc(long value) {
 		return getRMSB(value);
 	}
 	
