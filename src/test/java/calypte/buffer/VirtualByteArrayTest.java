@@ -110,20 +110,21 @@ public class VirtualByteArrayTest extends TestCase{
 
 	public void testWriteLastBytesMemoryBuffer() throws IOException {
 
-		int bufSize  = 1 << array.blockBitDesc;
-		long vOff    = array.dataSize - bufSize;
-
+		int blockSize = 1 << array.blockBitDesc;
+		long vOff     = array.dataSize - blockSize;
+		long reallOff = array.dataOffset + (vOff & array.blockMask);
 		Random r = new Random();
 		
-		byte[] data = new byte[bufSize];
-		byte[] val  = new byte[bufSize];
+		byte[] data = new byte[blockSize];
+		byte[] val  = new byte[blockSize];
 
 		r.nextBytes(data);
 
 		array.write(data, 0, vOff, data.length);
 
 		assertEquals(0, array.file.length());
-		array.memory.read(array.dataOffset, val, 0, val.length);
+		
+		array.memory.read(reallOff, val, 0, val.length);
 		assertArrayEquals(data, val);
 		
 	}
