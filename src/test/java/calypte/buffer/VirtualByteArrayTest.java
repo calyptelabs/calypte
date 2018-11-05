@@ -137,20 +137,34 @@ public class VirtualByteArrayTest extends TestCase{
 		byte[] diff = new byte[blockSize];
 		byte[] data = new byte[dataSize];
 		byte[] val  = new byte[dataSize];
+		byte[] mem  = new byte[dataSize];
 
 		r.nextBytes(diff);
 		r.nextBytes(data);
 
+		//escreve os dados no buffser
 		array.write(data, 0, 0, data.length);
 		array.write(diff, 0, data.length, diff.length);
 
-		System.arraycopy(diff, 0, data, 0, diff.length);
-		
-		assertEquals(blockSize, array.file.length());
-		
+		//verifica os dados na memória
+		System.arraycopy(data, 0, mem, 0, data.length);
+		System.arraycopy(diff, 0, mem, 0, diff.length);
 		array.memory.read(array.dataOffset, val, 0, val.length);
-		assertArrayEquals(data, val);
+		assertArrayEquals(mem, val);
+		
+		//Verifica os dados no arquivo
+		byte[] fileData = new byte[blockSize];
+		byte[] fileVal  = new byte[blockSize];
+		
+		System.arraycopy(data, 0, fileData, 0, fileData.length);
+		
+		array.file.seek(0);
+		array.file.read(fileVal, 0, fileVal.length);
+		assertEquals(blockSize, array.file.length());
+		assertArrayEquals(fileData, fileVal);
+		
 
+		//Verifica os dados de todos o buffer
 		byte[] fullData  = new byte[dataSize + blockSize];
 		byte[] fullVal   = new byte[dataSize + blockSize];
 		
