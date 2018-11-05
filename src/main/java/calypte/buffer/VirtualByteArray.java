@@ -82,6 +82,7 @@ public class VirtualByteArray implements ByteArray{
 		//Cria o arquivo de dump dos segmentos.
 		file.createNewFile();
 		this.file = new RandomAccessFile(file, "rw");
+		this.file.setLength(0);
 	}
 
 	private VirtualSegmentMapping createVirtualSegmentMapping() {
@@ -174,7 +175,7 @@ public class VirtualByteArray implements ByteArray{
 		}
 		
 		long vOff = destOff & blockMask;
-		long vSeg = destOff >> blockBitDesc;
+		long vSeg = destOff ^ vOff;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -212,7 +213,7 @@ public class VirtualByteArray implements ByteArray{
 		}
 		
 		long vOff = destOff & blockMask;
-		long vSeg = destOff >> blockBitDesc;
+		long vSeg = destOff ^ vOff;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -274,8 +275,8 @@ public class VirtualByteArray implements ByteArray{
 		}
 		
 		long vOff = destOff & blockMask;
-		long vSeg = destOff >> blockBitDesc;
-				;
+		long vSeg = destOff ^ vOff;
+		
 		long copy;
 		long maxSegCopy;
 		
@@ -306,7 +307,7 @@ public class VirtualByteArray implements ByteArray{
 		}
 		
 		long vOff = destOff & blockMask;
-		long vSeg = destOff >> blockBitDesc;
+		long vSeg = destOff ^ vOff;
 
 		long copy;
 		long maxSegCopy;
@@ -326,7 +327,7 @@ public class VirtualByteArray implements ByteArray{
 			len     -= copy;
 			srcOff  += copy;
 			vOff     = 0;
-			vSeg++;
+			vSeg    += blockSize;
 		}
 		
 	}

@@ -91,7 +91,7 @@ public class VirtualByteArrayTest extends TestCase{
 	
 	public void testWriteMemoryOnly() throws IOException {
 
-		int arraylen  = (int)array.dataSize;
+		int arraylen  = (int)(array.dataSize - (array.dataSize & array.blockMask));
 		
 		byte[] val  = new byte[arraylen];
 		byte[] data = new byte[arraylen];
@@ -131,10 +131,12 @@ public class VirtualByteArrayTest extends TestCase{
 	
 	public void testOverrideFirstSegment() throws IOException {
 		Random r = new Random();
-		
-		byte[] diff = new byte[1 << array.blockBitDesc];
-		byte[] data = new byte[(int)array.dataSize];
-		byte[] val  = new byte[(int)array.dataSize];
+		int blockSize = (int)(1 << array.blockBitDesc);
+		int dataSize  = (int)(array.dataSize - (array.dataSize & array.blockMask));
+
+		byte[] diff = new byte[blockSize];
+		byte[] data = new byte[dataSize];
+		byte[] val  = new byte[dataSize];
 
 		r.nextBytes(diff);
 		r.nextBytes(data);
@@ -146,7 +148,7 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		array.memory.read(array.dataOffset, val, 0, val.length);
 		
-		assertEquals(1024, array.file.length());
+		assertEquals(blockSize, array.file.length());
 		
 		assertArrayEquals(data, val);
 		

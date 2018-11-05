@@ -2,9 +2,13 @@ package calypte.buffer;
 
 public class VirtualSegmentMapping {
 
-	public static final long ITEM_TABLE_LENGTH = 1 << 2;
+	public static final long ITEM_TABLE_BITS_LENGTH = 2;
+	
+	public static final long ITEM_TABLE_LENGTH = 1 << ITEM_TABLE_BITS_LENGTH;
 
-	public static final long ITEM_LENGTH = 1 << 5;
+	public static final long ITEM_BITS_LENGTH = 6;
+	
+	public static final long ITEM_LENGTH = 1 << ITEM_BITS_LENGTH;
 	
 	public static final long MIN_TABLE_LENGTH = 4 << 2;
 	
@@ -37,8 +41,8 @@ public class VirtualSegmentMapping {
 		}
 		
 		this.size        = size;
-		this.tableSize   = size - (itensSize << 5);
-		this.hashMask    = getHashMask(this.tableSize) >> 2;
+		this.tableSize   = size - (itensSize << ITEM_BITS_LENGTH);
+		this.hashMask    = getHashMask(this.tableSize) >> ITEM_TABLE_BITS_LENGTH;
 		this.tableOffset = tableOffset;
 		this.entryOffset = this.tableSize;
 		this.data        = data;
@@ -53,12 +57,12 @@ public class VirtualSegmentMapping {
 	}
 	
 	private void createFreeMap(){
-		long tableIndex = tableSize >> 2;
+		long tableIndex = tableSize >> ITEM_TABLE_BITS_LENGTH;
 		for(long i=0;i<tableIndex;i++) {
 			this.data.writeInt(i << 2, -1);
 		}
 		
-		long indexSize = (size - entryOffset) >> 5;
+		long indexSize = (size - entryOffset) >> ITEM_BITS_LENGTH;
 		for(int i=0;i<indexSize;i++) {
 			free.add(i);
 			item.setVOffset(i, -1);
@@ -212,42 +216,42 @@ public class VirtualSegmentMapping {
 		
 		protected int getRootIndex(long key) {
 			long hash   = key & hashMask;
-			long offset = tableOffset + (hash << 2);
+			long offset = tableOffset + (hash << ITEM_TABLE_BITS_LENGTH);
 			int r = data.readInt(offset);
 			return r;
 		}
 		
 		protected void setRootIndex(long key, int index) {
 			long hash    = key & hashMask;
-			long offset = tableOffset + (hash << 2);
+			long offset = tableOffset + (hash << ITEM_TABLE_BITS_LENGTH);
 			data.writeInt(offset, index);
 		}
 		
 	}
 	
-	public class Item{
+	public class Item {
 
 		private static final int VOFFSET_OFFSET     = 16;
 
 		private static final int NEED_UPDATE_OFFSET = 24;
 		
 		public void setVOffset(long index, long value) {
-			long offset = entryOffset + (index << 5) + VOFFSET_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + VOFFSET_OFFSET;
 			data.writeLong(offset, value);
 		}
 		
 		public long getVOffset(long index) {
-			long offset = entryOffset + (index << 5) + VOFFSET_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + VOFFSET_OFFSET;
 			return data.readLong(offset);
 		}
 
 		public void setNeedUpdate(long index, boolean value) {
-			long offset = entryOffset + (index << 5) + NEED_UPDATE_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + NEED_UPDATE_OFFSET;
 			data.writeByte(offset, value? 1 : 0);
 		}
 		
 		public boolean isNeedUpdate(long index) {
-			long offset = entryOffset + (index << 5) + NEED_UPDATE_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + NEED_UPDATE_OFFSET;
 			return data.readByte(offset) != 0;
 		}
 		
@@ -264,17 +268,17 @@ public class VirtualSegmentMapping {
 		//private static final int VALUE_OFFSET    = 16;
 		
 		public int getNext(long index) {
-			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + NEXT_OFFSET;
 			return data.readInt(offset);
 		}
 
 		public int getPrevious(long index) {
-			long offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + PREVIOUS_OFFSET;
 			return data.readInt(offset);
 		}
 
 		public long getKey(long index) {
-			long offset = entryOffset + (index << 5) + KEY_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + KEY_OFFSET;
 			return data.readLong(offset);
 		}
 		
@@ -286,17 +290,17 @@ public class VirtualSegmentMapping {
 		*/
 		
 		public void setNext(long index, int value) {
-			long offset = entryOffset + (index << 5) + NEXT_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + NEXT_OFFSET;
 			data.writeInt(offset, value);
 		}
 
 		public void setPrevious(long index, int value) {
-			long offset = entryOffset + (index << 5) + PREVIOUS_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + PREVIOUS_OFFSET;
 			data.writeInt(offset, value);
 		}
 
 		public void setKey(long index, long value) {
-			long offset = entryOffset + (index << 5) + KEY_OFFSET;
+			long offset = entryOffset + (index << ITEM_BITS_LENGTH) + KEY_OFFSET;
 			data.writeLong(offset, value);
 		}
 		
@@ -311,9 +315,9 @@ public class VirtualSegmentMapping {
 	
 	public class List {
 
-		private static final int PREVIOUS_ITEM_OFFSET  = 24;
+		private static final int PREVIOUS_ITEM_OFFSET  = 25;
 		
-		private static final int NEXT_ITEM_OFFSET      = 28;
+		private static final int NEXT_ITEM_OFFSET      = 29;
 		
 		private int first;
 		
@@ -371,22 +375,22 @@ public class VirtualSegmentMapping {
 	    }
 		
 		private int getNext(int index) {
-			long off = entryOffset + (index << 5) + NEXT_ITEM_OFFSET; 
+			long off = entryOffset + (index << ITEM_BITS_LENGTH) + NEXT_ITEM_OFFSET; 
 			return data.readInt(off);
 		}
 
 		private void setNext(int index, int value) {
-			long off = entryOffset + (index << 5) + NEXT_ITEM_OFFSET; 
+			long off = entryOffset + (index << ITEM_BITS_LENGTH) + NEXT_ITEM_OFFSET; 
 			data.writeInt(off, value);
 		}
 
 		private int getPrevious(int index) {
-			long off = entryOffset + (index << 5) + PREVIOUS_ITEM_OFFSET; 
+			long off = entryOffset + (index << ITEM_BITS_LENGTH) + PREVIOUS_ITEM_OFFSET; 
 			return data.readInt(off);
 		}
 
 		private void setPrevious(int index, int value) {
-			long off = entryOffset + (index << 5) + PREVIOUS_ITEM_OFFSET; 
+			long off = entryOffset + (index << ITEM_BITS_LENGTH) + PREVIOUS_ITEM_OFFSET; 
 			data.writeInt(off, value);
 		}
 		

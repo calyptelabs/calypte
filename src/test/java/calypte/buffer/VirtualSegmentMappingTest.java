@@ -24,9 +24,9 @@ public class VirtualSegmentMappingTest extends TestCase{
 		bufferSize = 1024;
 		memory = new HeapByteArray(bufferSize);
 		mappingOffset = 0;
-		maxItens = (int)(bufferSize - bufferSize*0.1) >> 5;
+		maxItens = (int)(bufferSize - bufferSize*0.1) >> 6;
 		vsm = new VirtualSegmentMapping(memory, mappingOffset, maxItens, bufferSize);
-		tableSize = vsm.tableSize >> 2;		
+		tableSize = vsm.tableSize >> VirtualSegmentMapping.ITEM_TABLE_BITS_LENGTH;		
 	}
 	
 	public void tearDown() {
@@ -75,7 +75,7 @@ public class VirtualSegmentMappingTest extends TestCase{
 	}
 	
 	public void testOneRoot() {
-		long tableSize = vsm.tableSize >> 2; //Tamanho da tabela de itens
+		long tableSize = vsm.tableSize >> VirtualSegmentMapping.ITEM_TABLE_BITS_LENGTH; //Tamanho da tabela de itens
 				
 		//verifica se a tabela não foi iniciada
 		for(int i=0;i<tableSize;i++) {
