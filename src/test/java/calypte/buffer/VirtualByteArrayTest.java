@@ -146,11 +146,19 @@ public class VirtualByteArrayTest extends TestCase{
 
 		System.arraycopy(diff, 0, data, 0, diff.length);
 		
-		array.memory.read(array.dataOffset, val, 0, val.length);
-		
 		assertEquals(blockSize, array.file.length());
 		
+		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(data, val);
+
+		byte[] fullData  = new byte[dataSize + blockSize];
+		byte[] fullVal   = new byte[dataSize + blockSize];
+		
+		System.arraycopy(data, 0, fullData, 0, data.length);
+		System.arraycopy(diff, 0, fullData, data.length, diff.length);
+		
+		array.read(0, fullVal, 0, fullVal.length);
+		assertArrayEquals(fullData, fullVal);
 		
 	}
 

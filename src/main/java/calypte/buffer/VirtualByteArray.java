@@ -199,6 +199,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			len     -= copy;
 			srcOff  += copy;
+			destOff += copy;
 			vOff     = 0;
 			vSeg    += copy;
 		}
@@ -237,6 +238,7 @@ public class VirtualByteArray implements ByteArray{
 			
 			len     -= copy;
 			srcOff  += copy;
+			destOff += copy;
 			vOff     = 0;
 			vSeg    += copy;
 		}
