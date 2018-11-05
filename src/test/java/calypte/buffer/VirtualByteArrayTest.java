@@ -13,7 +13,7 @@ public class VirtualByteArrayTest extends TestCase{
 	private VirtualByteArray array;
 	
 	public void setUp() throws IOException {
-		array = new VirtualByteArray(1*1024*1024, 256*1024*1024, 1*1024, new File("./test.dta"));
+		array = new VirtualByteArray(1*1024*1024, 256*1024*1024, 8*1024, new File("./test.dta"));
 	}
 	
 	public void tearDown() {
@@ -151,6 +151,58 @@ public class VirtualByteArrayTest extends TestCase{
 		assertEquals(blockSize, array.file.length());
 		
 		assertArrayEquals(data, val);
+		
+	}
+
+	public void testWriteBuffer() throws IOException {
+		
+		Random r = new Random();
+		long bufferSize   = array.size();
+		int blockSize     = (int)(1 << array.blockBitDesc) + 1;
+		int lastBlockSize = (int)(bufferSize % blockSize);
+		
+		byte[] data  = new byte[blockSize];
+		byte[] lData = new byte[lastBlockSize];
+
+		r.nextBytes(data);
+		r.nextBytes(lData);
+
+		long off = 0;
+		
+		while(bufferSize - off > 0) {
+			
+			if(bufferSize - off > data.length) {
+				array.write(data, 0, off, data.length);
+				off += data.length;
+			}
+			else {
+				array.write(lData, 0, off, lData.length);
+				off += lData.length;
+			}
+			
+		}
+		
+		assertEquals(0, bufferSize - off);
+
+		byte[] val  = new byte[blockSize];
+		byte[] lVal  = new byte[lastBlockSize];
+
+		off = 0;
+		
+		while(bufferSize - off > 0) {
+			
+			if(bufferSize - off > data.length) {
+				array.read(off, val, 0, val.length);
+				assertArrayEquals("offset: " + off, data, val);
+				off += data.length;
+			}
+			else {
+				array.read(off, lVal, 0, lVal.length);
+				assertArrayEquals("offset: " + off, lData, lVal);
+				off += lData.length;
+			}
+			
+		}
 		
 	}
 	

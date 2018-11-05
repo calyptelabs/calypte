@@ -200,7 +200,7 @@ public class VirtualByteArray implements ByteArray{
 			len     -= copy;
 			srcOff  += copy;
 			vOff     = 0;
-			vSeg++;
+			vSeg    += copy;
 		}
 		
 		return maxCopy;
@@ -238,7 +238,7 @@ public class VirtualByteArray implements ByteArray{
 			len     -= copy;
 			srcOff  += copy;
 			vOff     = 0;
-			vSeg++;
+			vSeg    += copy;
 		}
 		
 		return (int)maxCopy;
@@ -295,7 +295,7 @@ public class VirtualByteArray implements ByteArray{
 			len     -= copy;
 			srcOff  += copy;
 			vOff     = 0;
-			vSeg++;
+			vSeg    += copy;
 		}				
 		
 	}
@@ -327,7 +327,7 @@ public class VirtualByteArray implements ByteArray{
 			len     -= copy;
 			srcOff  += copy;
 			vOff     = 0;
-			vSeg    += blockSize;
+			vSeg    += copy;
 		}
 		
 	}
