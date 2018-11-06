@@ -175,7 +175,7 @@ public class VirtualByteArrayTest extends TestCase{
 		assertArrayEquals(fullData, fullVal);
 		
 	}
-
+	
 	public void testWriteBuffer() throws IOException {
 		
 		Random r = new Random();

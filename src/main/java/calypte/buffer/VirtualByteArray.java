@@ -174,8 +174,8 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length());
 		}
 		
-		long vOff = destOff & blockMask;
-		long vSeg = destOff ^ vOff;
+		long vOff = srcOff & blockMask;
+		long vSeg = srcOff ^ vOff;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -213,8 +213,8 @@ public class VirtualByteArray implements ByteArray{
 			throw new IndexOutOfBoundsException((destOff + len) + " > " + dest.length);
 		}
 		
-		long vOff = destOff & blockMask;
-		long vSeg = destOff ^ vOff;
+		long vOff = srcOff & blockMask;
+		long vSeg = srcOff ^ vOff;
 		
 		long maxCopy = size - srcOff;
 		maxCopy = len > maxCopy? maxCopy : len;
@@ -237,10 +237,10 @@ public class VirtualByteArray implements ByteArray{
 			}
 			
 			len     -= copy;
-			srcOff  += copy;
 			destOff += copy;
-			vOff     = 0;
-			vSeg    += copy;
+			srcOff  += copy;
+			vOff     = srcOff & blockMask;
+			vSeg     = srcOff ^ vOff;
 		}
 		
 		return (int)maxCopy;
@@ -296,8 +296,9 @@ public class VirtualByteArray implements ByteArray{
 			
 			len     -= copy;
 			srcOff  += copy;
-			vOff     = 0;
-			vSeg    += copy;
+			destOff += copy;
+			vOff     = destOff & blockMask;
+			vSeg     = destOff ^ vOff;
 		}				
 		
 	}
@@ -328,8 +329,9 @@ public class VirtualByteArray implements ByteArray{
 			
 			len     -= copy;
 			srcOff  += copy;
-			vOff     = 0;
-			vSeg    += copy;
+			destOff += copy;
+			vOff     = destOff & blockMask;
+			vSeg     = destOff ^ vOff;
 		}
 		
 	}
