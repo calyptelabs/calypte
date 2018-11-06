@@ -137,7 +137,6 @@ public class VirtualByteArrayTest extends TestCase{
 		byte[] diff = new byte[blockSize];
 		byte[] data = new byte[dataSize];
 		byte[] val  = new byte[dataSize];
-		byte[] mem  = new byte[dataSize];
 
 		r.nextBytes(diff);
 		r.nextBytes(data);
@@ -147,6 +146,7 @@ public class VirtualByteArrayTest extends TestCase{
 		array.write(diff, 0, data.length, diff.length);
 
 		//verifica os dados da memória
+		byte[] mem  = new byte[dataSize];
 		System.arraycopy(data, 0, mem, 0, data.length);
 		System.arraycopy(diff, 0, mem, 0, diff.length);
 		array.memory.read(array.dataOffset, val, 0, val.length);
