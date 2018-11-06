@@ -17,14 +17,108 @@
 
 package calypte.buffer;
 
-public interface Buffer {
+import java.io.IOException;
+import java.io.RandomAccessFile;
+
+/**
+ * 
+ * @author Ribeiro
+ *
+ */
+public class Buffer {
 	
-	long alloc();
+	private long firstFree;
 	
-	int read(long offset, byte[] buf, int off, int len);
+	private ByteArray byteArray;
 	
-	void write(long offset, byte[] buf, int off, int len);
+	private long lastOffset;
 	
-	void release(long segment);
+	private long blockSize;
+	
+	public Buffer(ByteArray byteArray, long blockSize) {
+		this.blockSize  = blockSize;
+		this.byteArray  = byteArray;
+		this.firstFree  = -1;
+		this.lastOffset = 0;
+	}
+	
+	public synchronized long alloc() {
+		
+		if(firstFree != -1) {
+			long offset = firstFree;
+			firstFree = byteArray.readLong(this.firstFree);
+			return offset;
+		}
+		
+		long offset = lastOffset;
+		lastOffset += blockSize;
+		return offset;
+		
+	}
+	
+	public synchronized void release(long segment) {
+		segment = segment - (segment % blockSize);
+		
+		if(firstFree == -1) {
+			firstFree = segment;
+		}
+		else {
+			byteArray.writeLong(segment, firstFree);
+			firstFree = segment;
+		}
+		
+	}
+	
+	public long readLong(long offset) {
+		return byteArray.readLong(offset);
+	}
+
+	public int readInt(long offset) {
+		return byteArray.readInt(offset);
+	}
+
+	public short readShort(long offset) {
+		return byteArray.readShort(offset);
+	}
+
+	public byte readByte(long offset) {
+		return byteArray.readByte(offset);
+	}
+	
+	public int read(long srcOff, byte[] dest, int destOff, int len) {
+		return byteArray.read(srcOff, dest, destOff, len);
+	}
+
+	public long read(long srcOff, RandomAccessFile dest, long destOff, long len) throws IOException{
+		return byteArray.read(srcOff, dest, destOff, len);
+	}
+	
+	public void writeLong(long offset, long value) {
+		byteArray.writeLong(offset, value);
+	}
+	
+	public void writeInt(long offset, long value) {
+		byteArray.writeInt(offset, value);
+	}
+
+	public void writeShort(long offset, long value) {
+		byteArray.writeShort(offset, value);
+	}
+
+	public void writeByte(long offset, long value) {
+		byteArray.writeByte(offset, value);
+	}
+	
+	public void write(byte[] src, int srcOff, long destOff, int len) {
+		byteArray.write(src, srcOff, destOff, len);
+	}
+
+	public void write(RandomAccessFile src, long srcOff, long destOff, long len) throws IOException{
+		byteArray.write(src, srcOff, destOff, len);
+	}
+	
+	public long size() {
+		return byteArray.size();
+	}
 	
 }
