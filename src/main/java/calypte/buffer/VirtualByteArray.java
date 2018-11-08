@@ -102,9 +102,10 @@ public class VirtualByteArray implements ByteArray{
 		this.segmentMapping = this.createVirtualSegmentMapping();
 		
 		//Cria o arquivo de dump dos segmentos.
-		file.createNewFile();
-		this.file = new RandomAccessFile(file, "rw");
-		this.file.setLength(0);
+		this.file = file;
+		this.file.createNewFile();
+		this.fileAccess = new RandomAccessFile(file, "rw");
+		this.fileAccess.setLength(0);
 	}
 
 	private VirtualSegmentMapping createVirtualSegmentMapping() {
@@ -360,6 +361,22 @@ public class VirtualByteArray implements ByteArray{
 		return size;
 	}
 	
+	protected void finalize() throws Throwable {
+		try {
+			
+			try {
+				fileAccess.close();
+			}
+			finally{
+				file.delete();
+			}
+			
+		}
+		finally {
+			super.finalize();
+		}
+	}
+	
 	protected long getSegment(long vOffset) {
 		
 		long offset = segmentMapping.get(vOffset);
@@ -377,7 +394,9 @@ public class VirtualByteArray implements ByteArray{
 		return offset;
 	}
 	
-	protected RandomAccessFile file;
+	protected File file;
+	
+	protected RandomAccessFile fileAccess;
 	
 	protected void reloadSegment(long vOffset, long offset, Item item) {
 
@@ -387,14 +406,14 @@ public class VirtualByteArray implements ByteArray{
 			boolean needUpdate = item.isNeedUpdate(index);
 			
 			if(needUpdate && oldVOffset != -1) {
-				if(oldVOffset + blockSize > file.length()) {
-					file.setLength(oldVOffset + blockSize);
+				if(oldVOffset + blockSize > fileAccess.length()) {
+					fileAccess.setLength(oldVOffset + blockSize);
 				}
-				memory.read(dataOffset + offset, file, oldVOffset, blockSize);
+				memory.read(dataOffset + offset, fileAccess, oldVOffset, blockSize);
 			}
 			
-			if(vOffset < file.length()) {
-				memory.write(file, vOffset, dataOffset + offset, blockSize);
+			if(vOffset < fileAccess.length()) {
+				memory.write(fileAccess, vOffset, dataOffset + offset, blockSize);
 			}
 			
 			item.setVOffset(index, vOffset);

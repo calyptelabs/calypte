@@ -26,6 +26,8 @@ import java.io.RandomAccessFile;
  *
  */
 public class Buffer {
+
+	private static final long INVALID_OFFSET = 0xffffffffffffffffL;
 	
 	private long firstFree;
 	
@@ -38,13 +40,13 @@ public class Buffer {
 	public Buffer(ByteArray byteArray, long blockSize) {
 		this.blockSize  = blockSize;
 		this.byteArray  = byteArray;
-		this.firstFree  = -1;
+		this.firstFree  = INVALID_OFFSET;
 		this.lastOffset = 0;
 	}
 	
 	public synchronized long alloc() {
 		
-		if(firstFree != -1) {
+		if(firstFree != INVALID_OFFSET) {
 			long offset = firstFree;
 			firstFree = byteArray.readLong(this.firstFree);
 			return offset;
@@ -56,10 +58,15 @@ public class Buffer {
 		
 	}
 	
+	public synchronized void releaseAll() {
+		lastOffset = 0;
+		firstFree  = INVALID_OFFSET;
+	}
+	
 	public synchronized void release(long segment) {
 		segment = segment - (segment % blockSize);
 		
-		if(firstFree == -1) {
+		if(firstFree == INVALID_OFFSET) {
 			firstFree = segment;
 		}
 		else {
@@ -67,6 +74,10 @@ public class Buffer {
 			firstFree = segment;
 		}
 		
+	}
+	
+	public long getBlockSize() {
+		return blockSize;
 	}
 	
 	public long readLong(long offset) {

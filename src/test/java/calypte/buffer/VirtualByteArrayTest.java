@@ -22,7 +22,7 @@ public class VirtualByteArrayTest extends TestCase{
 	
 	public void testWriteBytes() throws IOException {
 		array.write("TESTE".getBytes(), 0, 0, 5);
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		byte[] tmp = new byte[5];
 		array.memory.read(array.dataOffset, tmp, 0, 5);
@@ -41,7 +41,7 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		array.write(data, 0, 0, data.length);
 		
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(val, data);
@@ -61,7 +61,7 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		array.write(data, 0, 0, data.length);
 		
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(val, data);
@@ -82,7 +82,7 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		array.write(data, 0, 0, data.length);
 		
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(val, data);
@@ -101,7 +101,7 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		array.write(data, 0, 0, data.length);
 		
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		array.memory.read(array.dataOffset, val, 0, val.length);
 		assertArrayEquals(val, data);		
@@ -122,7 +122,7 @@ public class VirtualByteArrayTest extends TestCase{
 
 		array.write(data, 0, vOff, data.length);
 
-		assertEquals(0, array.file.length());
+		assertEquals(0, array.fileAccess.length());
 		
 		array.memory.read(reallOff, val, 0, val.length);
 		assertArrayEquals(data, val);
@@ -158,9 +158,9 @@ public class VirtualByteArrayTest extends TestCase{
 		
 		System.arraycopy(data, 0, fileData, 0, fileData.length);
 		
-		array.file.seek(0);
-		array.file.read(fileVal, 0, fileVal.length);
-		assertEquals(blockSize, array.file.length());
+		array.fileAccess.seek(0);
+		array.fileAccess.read(fileVal, 0, fileVal.length);
+		assertEquals(blockSize, array.fileAccess.length());
 		assertArrayEquals(fileData, fileVal);
 		
 
